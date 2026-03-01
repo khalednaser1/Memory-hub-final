@@ -1,0 +1,94 @@
+import { z } from 'zod';
+import { insertMemorySchema, memories } from './schema';
+
+export const errorSchemas = {
+  validation: z.object({
+    message: z.string(),
+    field: z.string().optional(),
+  }),
+  notFound: z.object({
+    message: z.string(),
+  }),
+  internal: z.object({
+    message: z.string(),
+  }),
+};
+
+export const api = {
+  memories: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/memories' as const,
+      responses: {
+        200: z.array(z.custom<typeof memories.$inferSelect>()),
+      },
+    },
+    get: {
+      method: 'GET' as const,
+      path: '/api/memories/:id' as const,
+      responses: {
+        200: z.custom<typeof memories.$inferSelect>(),
+        404: errorSchemas.notFound,
+      },
+    },
+    create: {
+      method: 'POST' as const,
+      path: '/api/memories' as const,
+      input: insertMemorySchema,
+      responses: {
+        201: z.custom<typeof memories.$inferSelect>(),
+        400: errorSchemas.validation,
+      },
+    },
+    update: {
+      method: 'PUT' as const,
+      path: '/api/memories/:id' as const,
+      input: insertMemorySchema.partial(),
+      responses: {
+        200: z.custom<typeof memories.$inferSelect>(),
+        400: errorSchemas.validation,
+        404: errorSchemas.notFound,
+      },
+    },
+    delete: {
+      method: 'DELETE' as const,
+      path: '/api/memories/:id' as const,
+      responses: {
+        204: z.void(),
+        404: errorSchemas.notFound,
+      },
+    },
+    search: {
+      method: 'POST' as const,
+      path: '/api/search' as const,
+      input: z.object({
+        query: z.string(),
+        mode: z.enum(['semantic', 'keyword']),
+      }),
+      responses: {
+        200: z.object({
+          results: z.array(
+            z.custom<typeof memories.$inferSelect>().and(
+              z.object({
+                relevanceScore: z.number(),
+                matchReason: z.string(),
+              })
+            )
+          ),
+        }),
+      },
+    }
+  },
+};
+
+export function buildUrl(path: string, params?: Record<string, string | number>): string {
+  let url = path;
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (url.includes(`:${key}`)) {
+        url = url.replace(`:${key}`, String(value));
+      }
+    });
+  }
+  return url;
+}
