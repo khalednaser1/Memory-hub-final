@@ -1,0 +1,143 @@
+
+
+Build a responsive web app called **Memory Hub** (an “Intelligent Personal Memory” web service). The app helps a user **capture personal information** (notes / links / files) in one place and **find it by meaning (semantic search)**, not only by exact keywords. This project is currently at an early stage, so implement a **working MVP** with a strong **Frontend (UI/UX)** and a **mock API/data layer** that can later be replaced by a real Node.js backend + SQL/files + vector index.
+
+### 1) Tech stack (must)
+
+* **Next.js (App Router) + TypeScript**
+* **Tailwind CSS** + reusable UI components
+* Clean project structure, responsive design, basic accessibility
+* No external paid services required to run
+
+### 2) Product concept (must be clear in the UI)
+
+Memory Hub is a “personal memory map”:
+
+* Users save memories (text/link/file) with metadata.
+* The system enriches each memory: **tags**, **entities** (people/dates/topics), **short summary**.
+* Search supports **semantic mode** (meaning-based) so different phrasing still finds the right item.
+* The UI shows **connections** between memories (related by people/dates/topics).
+
+### 3) MVP scope (what should work end-to-end)
+
+Implement a working flow:
+**Add memory → Processing (auto tags/entities/summary) → Semantic Search → Open Details → See Related Memories**
+
+Use a **mock semantic search** that feels meaning-based even without a real LLM:
+
+* Option A (preferred): simple local “embedding” vectorization (lightweight) + cosine similarity
+* Option B: semantic signature from tags/entities + similarity scoring
+  Combine ranking: **semantic score + recency + tag/entity matches**
+
+Also provide a toggle:
+
+* **Semantic search (by meaning)**
+* **Keyword search (exact words)**
+
+Include a clear example in UI copy:
+Searching “internship report” should still find a memory saved as “practice document”.
+
+### 4) Pages / routes (required)
+
+1. **Landing (/)**
+
+   * Explain the problem: data scattered across notes/files/links/chat; keyword search fails with rephrasing
+   * CTA buttons: “Add Memory” and “Search”
+2. **Demo Auth (/login)**
+
+   * Simple demo login (no real OAuth). After login, treat data as private to that user.
+3. **Capture / Add Memory (/capture)**
+
+   * Form fields: Title (required), Content (required for text), Link (optional), File upload (optional placeholder), Manual tags (optional)
+   * UX states: validation, saving, success toast
+   * After save, show a “Processing…” step that generates summary/entities/tags
+4. **Library (/library)**
+
+   * Cards/list of memories with title, summary, tags, created date, type
+   * Filters: type (text/link/file), tag, date range
+   * Sorting: newest, relevance
+5. **Search (/search)**
+
+   * Big search input, toggle Semantic/Keyword
+   * Results list with: relevance score (simple), snippet, tags, entities
+   * “Why this matched” mini-explanation (e.g., matched topic + person + similar meaning)
+   * Empty state with suggestions
+6. **Memory Details (/memory/[id])**
+
+   * Full content, metadata, entities, tags, summary
+   * Related memories section grouped by People / Dates / Topics
+   * Actions: Edit, Delete
+7. **Connections (/connections)**
+
+   * A “memory map” view. Keep it simple but interactive:
+
+     * Grouped related lists and/or a basic node-link view if easy
+   * Clicking an entity filters/show connected memories
+
+### 5) Data model (use this consistently)
+
+A Memory item should include:
+
+* `id`, `title`, `content`, `type` (“text” | “link” | “file”), `createdAt`
+* `tags: string[]`
+* `entities: { people: string[]; dates: string[]; topics: string[] }`
+* `summary: string`
+* `semanticVector: number[]` OR `semanticSignature: string` (for mock semantic search)
+* `relatedIds: string[]` (computed or stored)
+
+### 6) Mock backend / storage (required for working demo)
+
+Implement a minimal data layer so the app works without external services:
+
+* Use **Next.js Route Handlers** under `/api/*` for CRUD:
+
+  * `POST /api/memories` (create + trigger processing)
+  * `GET /api/memories` (list)
+  * `GET /api/memories/:id` (details)
+  * `PUT /api/memories/:id` (edit)
+  * `DELETE /api/memories/:id`
+  * `POST /api/search` (semantic/keyword search)
+* Store data in a simple in-memory store OR local JSON file for dev. If possible, use local persistent storage (like SQLite) only if easy; otherwise keep it simple.
+* Keep the API contract clean so it can be replaced later with Node.js + SQL + files + vector DB.
+
+### 7) “Processing” simulation (NLP/LLM behavior)
+
+After adding a memory, simulate enrichment:
+
+* Extract entities with simple rules (capitalized names, date patterns) + fallback placeholders
+* Generate tags from frequent keywords/topics
+* Generate a short summary (first sentence + trimmed)
+  Show a UI progress state:
+  **Queued → Processing → Done**
+
+### 8) Privacy / access control (MVP)
+
+* Treat all memories as private to the logged-in demo user
+* No admin panel needed, but protect routes from unauthenticated access
+
+### 9) Analytics (privacy-safe, MVP)
+
+Add lightweight analytics events (no sensitive text stored):
+
+* `search_performed`, `result_opened`, `empty_search`, `add_memory`, `api_error`
+  Optionally show a small “Metrics” widget (demo): average search response time, empty search rate.
+
+### 10) UI/UX requirements (important)
+
+* Modern minimal UI, clean typography, consistent spacing
+* Micro-interactions: skeleton loaders, smooth transitions, toasts
+* Keyboard shortcut: **Ctrl+K** opens search
+* Debounced search input
+* Clear error/empty/loading states everywhere
+* Primary UI language: **Russian** (since the defense is in Russian), with optional English toggle if easy
+
+### 11) Deliverable expectation
+
+At the end, the app should feel like a real MVP:
+
+* I can log in → add memories → see them processed → search by meaning → open details → view related memories → edit/delete.
+* Code should be clean and readable, with comments.
+* Architecture should match: Frontend → API → Processing → Storage + semantic index (mock).
+
+Build the full app now.
+
