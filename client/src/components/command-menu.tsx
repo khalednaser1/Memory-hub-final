@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
-import { Calculator, Calendar, CreditCard, Settings, Smile, User, Brain, Search as SearchIcon, ArrowRight, Type, Hash } from "lucide-react";
+import { Brain, Search as SearchIcon, Type, Library } from "lucide-react";
 
 import {
   CommandDialog,
