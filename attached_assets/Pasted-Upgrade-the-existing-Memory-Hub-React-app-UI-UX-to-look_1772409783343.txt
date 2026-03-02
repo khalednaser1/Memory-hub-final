@@ -1,0 +1,53 @@
+Upgrade the existing "Memory Hub" React app UI/UX to look like a real polished product (graduation demo-ready), WITHOUT removing current features.
+
+CRITICAL:
+- Keep all existing routes working.
+- Do not create broken imports.
+- Improve layout density: avoid large empty whitespace; use max-width containers, responsive grids, and richer content.
+- Add micro-interactions (hover, transitions), empty states, and toasts.
+
+UI goals:
+- Modern SaaS dashboard style
+- Consistent spacing, typography, and card system
+- Clear navigation (Sidebar + Topbar on mobile)
+- Light/Dark mode toggle
+
+Implement these enhancements:
+
+1) Add a new page: /dashboard (set as default after login)
+- KPI cards: Total memories, Memories this week, Top tag
+- Recent memories list (last 5) with quick open
+- Quick Capture widget (mini form)
+- “Suggested connections” section (top entities/tags)
+
+2) Improve Library page:
+- Responsive grid + list toggle
+- Filter panel (type, tags) + sort dropdown
+- Search results highlight + “why matched” badges
+- Better empty state with CTA button to /capture
+
+3) Improve Search page:
+- Split layout: results list on left, preview on right
+- Semantic vs keyword toggle styled as segmented control
+- Show scoring breakdown (tag match, synonym match, recency boost)
+
+4) Improve Connections page:
+- Replace the empty center with richer widgets:
+  - Key Topics (with counts)
+  - Mentioned People (extract from entities if possible)
+  - Popular Tags (chips)
+  - “Suggested links” (co-occurrence mock)
+- Add a simple “mini graph” view placeholder (cards connected via lines optional)
+
+5) Add Memory Details page (if not already):
+- Full details + edit/delete actions
+- Tabs: Content / Summary / Entities / Related
+- Related memories based on shared tags/entities
+
+6) Add global UI improvements:
+- Toast notifications for create/edit/delete
+- Confirm modal for delete
+- Skeleton loading placeholders
+- Smooth transitions
+
+Make sure everything runs with zero errors.
