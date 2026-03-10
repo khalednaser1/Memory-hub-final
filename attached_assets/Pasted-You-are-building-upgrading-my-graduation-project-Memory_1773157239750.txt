@@ -1,0 +1,127 @@
+You are building/upgrading my graduation project “Memory Hub”.
+
+TARGET STACK (must match in code & structure):
+- Frontend: Next.js (App Router) + TypeScript
+- UI: Tailwind CSS + reusable components
+- Backend: Node.js API (Next.js Route Handlers under /app/api)
+- Storage: SQL + Files (for MVP you may use SQLite locally, and store file metadata; no paid services)
+- Vector search: optional (pgvector/FAISS mentioned in roadmap) — for MVP implement a mock “semantic-like” ranker, but design the code so it can be replaced later.
+- NLP/LLM: mock entity extraction + mock summarization.
+
+CRITICAL RULES:
+1) Do NOT use paid external services.
+2) Must run locally with `npm install` + `npm run dev` with zero errors.
+3) Keep it demo-ready for university defense.
+4) Provide clean file structure, correct imports, and strict TypeScript types.
+5) Use Tailwind for styling (dark theme friendly).
+
+MVP SCOPE (must be implemented now):
+- Capture: add memory (note/link/file metadata)
+- Library: view and filter
+- Timeline: grouped by date
+- Search: keyword + semantic-like
+- Memory Details: edit/delete, tags, summary, entities
+- AI Chat (Mock) MUST WORK: answer questions by searching memories and citing sources
+
+========================================
+1) Data model + Storage (SQL)
+========================================
+Use SQLite for MVP (or any local SQL solution with no paid service).
+Create schema:
+- memories: id, type, title, content, url, tags (or join table), createdAt, updatedAt
+- tags: id, name, color
+- memory_tags: memoryId, tagId
+- files: id, memoryId, filename, mime, size, path (store metadata only)
+
+Implement a simple DB layer:
+- /lib/db.ts (connect + helpers)
+- typed repositories/services
+
+========================================
+2) API (Node.js via Next.js Route Handlers)
+========================================
+Create API routes:
+- GET/POST /api/memories
+- GET/PATCH/DELETE /api/memories/:id
+- GET/POST /api/tags
+- GET /api/search?q=...&mode=keyword|semantic
+- POST /api/chat (mock chat answer using search)
+
+Return JSON consistently.
+
+========================================
+3) Pages (Next.js App Router)
+========================================
+Create pages:
+- /dashboard (home)
+- /library
+- /timeline
+- /search
+- /chat
+- /add
+- /memory/[id]
+- /tags
+- /settings
+
+Use a left sidebar layout (like a SaaS app).
+
+Dashboard must have:
+- KPI cards: Total Memories, This Week, Top Tag
+- Recent Memories (last 5)
+- Quick Capture widget
+- Popular Tags
+- By Type stats as progress bars
+
+========================================
+4) Search (keyword + semantic-like)
+========================================
+Keyword:
+- match in title/content/url/tags
+
+Semantic-like (MVP mock):
+- scoring using:
+  - token overlap
+  - partial matches
+  - synonym map (config file)
+  - tag overlaps
+  - small freshness bonus
+Sort by score and return "whyMatched" reasons.
+
+UI must be split view:
+- left results list with badges (exact/partial/tag/synonym)
+- right preview of selected memory
+
+========================================
+5) NLP mock: summary + entities
+========================================
+- Summary: produce 2-3 sentence summary from content (heuristic).
+- Entities: extract simple entities (dates, emails, capitalized words, @mentions).
+Show these in Memory Details under tabs.
+
+========================================
+6) AI Chat (Mock) MUST WORK
+========================================
+Implement chat behavior:
+- store chat history in DB or local storage (either is fine)
+- When user asks:
+  1) call semantic-like search in DB
+  2) take top 3 memories
+  3) compose an answer:
+     - short paragraph
+     - bullet points
+     - "Sources" with clickable links to /memory/[id]
+- If no results: explain and suggest what to save.
+
+No external LLM.
+
+========================================
+7) UI Polish
+========================================
+- Reusable components: Button, Card, Badge, Tabs, Modal, Toast
+- Clean empty states
+- Smooth transitions
+- Dark theme
+
+DELIVERABLE:
+Implement all of the above as a working Next.js + TypeScript app.
+Do not leave TODOs for core MVP features.
