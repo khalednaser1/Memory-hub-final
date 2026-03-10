@@ -1,6 +1,6 @@
 import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Brain, Plus, Library, Search, Network, LogOut, Menu, X } from "lucide-react";
+import { Brain, Plus, Library, Search, Network, LogOut, Menu, X, Calendar, MessageSquare, Settings as SettingsIcon, LayoutDashboard } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { CommandMenu } from "./command-menu";
 import { Button } from "@/components/ui/button";
@@ -36,8 +36,11 @@ export function Layout({ children }: LayoutProps) {
   }
 
   const navItems = [
+    { href: "/dashboard", icon: LayoutDashboard, label: "Главная" },
     { href: "/library", icon: Library, label: "Библиотека" },
+    { href: "/timeline", icon: Calendar, label: "Шкала времени" },
     { href: "/search", icon: Search, label: "Поиск" },
+    { href: "/chat", icon: MessageSquare, label: "Чат" },
     { href: "/connections", icon: Network, label: "Связи" },
   ];
 
@@ -94,7 +97,18 @@ export function Layout({ children }: LayoutProps) {
           })}
         </nav>
 
-        <div className="p-4 border-t border-border/50 mt-auto">
+        <div className="p-4 border-t border-border/50 mt-auto space-y-2">
+          <Link 
+            href="/settings"
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${
+              location === '/settings'
+                ? "bg-primary/10 text-primary font-medium" 
+                : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+            }`}
+          >
+            <SettingsIcon className="w-5 h-5" />
+            Настройки
+          </Link>
           <div className="flex items-center justify-between px-3 py-2">
             <div className="flex items-center gap-3 truncate">
               <div className="w-8 h-8 rounded-full bg-accent text-accent-foreground flex items-center justify-center font-semibold text-sm shrink-0">

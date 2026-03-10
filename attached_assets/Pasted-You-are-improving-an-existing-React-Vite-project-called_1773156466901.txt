@@ -1,0 +1,159 @@
+You are improving an existing React + Vite project called "Memory Hub" (graduation MVP).
+The project already works. Your job is to UPGRADE it without breaking anything.
+
+STRICT RULES:
+1) Do NOT rewrite the whole project.
+2) Keep current stack: React + Vite + React Router + Tailwind.
+3) JavaScript only (no TypeScript).
+4) No new paid services. No backend requirement.
+5) Do NOT introduce broken imports. All paths must exist.
+6) Work step-by-step in commits/clear sections, but in ONE delivery.
+7) Keep current data approach (LocalStorage) unless it already uses something else.
+
+GOAL:
+Make the app look like a polished SaaS product (similar to a modern admin dashboard)
+and make it demo-ready for a university defense.
+
+========================================
+A) Add /dashboard (Home after login)
+========================================
+Create src/pages/Dashboard.jsx and route /dashboard.
+Make / redirect to /dashboard.
+
+Dashboard must show:
+- KPI cards:
+  • Total Memories
+  • Memories This Week
+  • Top Tag
+- Recent Memories (last 5) with click → details
+- Quick Capture widget:
+  • Title + Content + Tags input
+  • Save button
+  • After save show toast and refresh stats
+- Popular Tags widget (top 8)
+- By Type stats (Note/Link/File/Event/Image/etc) as progress bars
+
+All empty states should look good (help text + CTA).
+
+========================================
+B) Improve Library page
+========================================
+- Add search box + filter chips (type, tags)
+- Sort dropdown (newest, oldest, title)
+- Grid/List toggle
+- Better cards:
+  • Type icon
+  • tags preview
+  • created date
+- Clicking a card goes to details page
+
+========================================
+C) Improve Search page (Split View)
+========================================
+Turn Search page into a split layout:
+Left side:
+- Search input
+- mode toggle: Keyword / Semantic
+- Results list
+- Show "Why matched" badges:
+   • exact word match
+   • partial match
+   • tag match
+   • synonym match (simple synonyms map)
+Right side:
+- Selected memory preview (title, content excerpt, tags, date)
+- Button: Open full details
+
+Semantic mode must be a REAL mock:
+- compute a score using:
+  • keyword matches in title/content
+  • partial matches
+  • tag overlaps
+  • synonyms map (e.g. learn~study, university~uni, report~document, work~internship)
+  • slight freshness bonus
+Sort results by score and display score softly (not too prominent).
+
+========================================
+D) Timeline page improvements
+========================================
+- Group memories by date sections (Today / This Week / Earlier)
+- Add filters dropdown (type, tag)
+- Improve cards with hover + quick open
+- Add empty state
+
+========================================
+E) Memory Details page (Strong)
+========================================
+Create /memory/:id page if not existing, or upgrade it:
+- Show title, type badge, created date
+- Tabs:
+   1) Content
+   2) AI Summary (mock: generate short summary from content)
+   3) Tags & Entities (mock entities extraction: simple heuristics - capitalized words, dates patterns)
+   4) Related Memories (shared tags + similar words)
+- Buttons:
+   • Edit
+   • Delete (confirm modal)
+- Toast on save/delete
+
+Editing can be inline or separate /edit route, but must work.
+
+========================================
+F) Tags & Connections page
+========================================
+Create/Upgrade /tags page:
+- Create tag (name + optional color)
+- List tags with memory count
+- Popular Tags
+- Suggested Links (mock co-occurrence):
+   show pairs of tags that appear together in memories
+- Clicking a tag filters Library or shows tag details page
+
+========================================
+G) Settings page
+========================================
+- Toggle: default search mode (semantic/keyword)
+- Toggle: dark mode
+- Export data as JSON (memories + tags)
+- Import data from JSON (validate safely)
+- Danger Zone: Clear all data (confirm modal)
+
+========================================
+H) AI Chat (Mock) MUST WORK
+========================================
+Create/Upgrade /chat (or /ai-chat) page:
+UI:
+- Chat layout like a real assistant
+- Suggestion buttons (example prompts)
+- Input + send
+- Messages list
+
+Behavior (must be functional without external APIs):
+When user asks a question:
+1) Use semantic search over stored memories (same scoring logic as Search page)
+2) Take top 3 matches
+3) Generate an answer in a helpful way:
+   - short answer paragraph
+   - bullet points if useful
+   - "Sources" section listing the matched memory titles (clickable links to /memory/:id)
+If no matches:
+   - say you could not find relevant memories
+   - suggest what to save or how to ask
+
+Store chat history in LocalStorage.
+Add "Clear chat" button.
+
+========================================
+I) Global UI polish
+========================================
+- Create reusable UI components:
+  Card, Button, Badge, Modal, Toast, Tabs
+- Smooth transitions, consistent spacing, good typography
+- Keyboard shortcuts (optional): "/" focus search, "n" new memory
+- Loading skeletons (simple)
+- NO heavy libraries; keep lightweight.
+
+DELIVERABLE:
+Implement all changes with correct imports and file structure.
+After implementation, ensure `npm run dev` works with zero errors.
+Do not remove existing working features.
