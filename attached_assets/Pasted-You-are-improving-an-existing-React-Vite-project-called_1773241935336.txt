@@ -1,0 +1,146 @@
+You are improving an existing React + Vite project called "Memory Hub" (graduation MVP).
+
+IMPORTANT (do not break anything):
+- Do NOT rewrite the whole project.
+- Keep existing routing and app structure.
+- JavaScript only (NO TypeScript).
+- Keep Tailwind (or add it only if already configured).
+- No paid services, no backend required.
+- All imports must resolve. Create any file you reference.
+- The app must run with `npm install` + `npm run dev` with ZERO errors.
+
+GOAL:
+Make the UI look like a polished SaaS dashboard (similar to Lovable’s "Memory Hub") and make the MVP feel complete.
+Also implement an AI Chat (Mock) that actually works using local stored memories.
+
+========================================
+1) Data & Storage (MVP)
+========================================
+Use LocalStorage as the source of truth.
+Ensure memories follow a consistent shape like:
+{ id, type, title, content, url?, tags:[], createdAt, updatedAt }
+If current data shape differs, adapt your code to the existing shape without breaking.
+
+========================================
+2) Add /dashboard page (SaaS UI)
+========================================
+Create a Dashboard page and route /dashboard.
+Make it the default route after login (or app start).
+
+Dashboard must include:
+- KPI cards:
+  • Total Memories
+  • Memories This Week
+  • Top Tag
+- Recent Memories (last 5) clickable to Details
+- Quick Capture widget:
+  • Title input
+  • Content textarea
+  • Tags input (comma or enter)
+  • Save button (toast on success)
+- Popular Tags (top 8)
+- By Type stats (progress bars for Note/Link/File/Event/Image/etc)
+
+Add good empty states.
+
+========================================
+3) Upgrade Add Memory page (like Lovable)
+========================================
+Add memory type selector buttons (Note / Link / File / Event / Image / Chat)
+Show fields based on type:
+- Note: title + content + tags
+- Link: title + url + notes + tags
+- File: file metadata only (filename, size) + notes + tags
+- Event: title + date + notes + tags
+
+No backend upload required; store metadata only.
+
+========================================
+4) Search page (Split view + real mock semantic)
+========================================
+Make Search page split layout:
+Left:
+- Search input
+- Toggle: Keyword / Semantic
+- Results list with "Why matched" badges:
+  • exact
+  • partial
+  • tag
+  • synonym
+Right:
+- Selected memory preview + button open details
+
+Semantic mode MUST WORK (no external AI):
+Implement a scoring function that ranks memories using:
+- word match in title/content/url
+- partial match
+- tag overlap
+- synonyms map (simple internal map file)
+- small freshness bonus
+Return reasons for why each item matched.
+
+========================================
+5) Timeline improvements
+========================================
+- Group by date: Today / This Week / Earlier
+- Filters (type + tag)
+- Better cards & empty state
+
+========================================
+6) Memory Details page (strong for defense)
+========================================
+/memory/:id
+- Show title, type, tags, created date
+- Tabs:
+  1) Content
+  2) AI Summary (mock heuristic: 2-3 sentences from content)
+  3) Entities (mock: dates/emails/capitalized words/@mentions)
+  4) Related memories (shared tags + similar words)
+- Edit + Delete (confirm modal)
+- Toast notifications
+
+========================================
+7) Tags page (connections)
+========================================
+- Create tag + optional color
+- List tags with counts
+- Suggested links (mock co-occurrence pairs)
+- Clicking a tag filters Library or shows memories list
+
+========================================
+8) Settings page
+========================================
+- Toggle dark mode
+- Default search mode toggle
+- Export JSON
+- Import JSON (validate safely)
+- Clear all data (confirm)
+
+========================================
+9) AI Chat (Mock) MUST WORK
+========================================
+Create /chat page with assistant UI.
+When user sends a message:
+1) Run semantic search on stored memories
+2) Take top 3 results
+3) Generate an answer:
+   - short response paragraph
+   - bullet points
+   - "Sources" section with clickable memory links (/memory/:id)
+If no results: explain and suggest what to save.
+
+Persist chat messages in LocalStorage.
+Add Clear Chat.
+
+========================================
+10) UI Polish
+========================================
+- Reusable UI components: Button, Card, Badge, Modal, Toast, Tabs
+- Consistent spacing & typography
+- Smooth transitions
+- No heavy libraries
+
+DELIVERABLE:
+Implement all features with correct imports.
+Do not remove existing working features.
+Ensure the app runs with zero errors.
