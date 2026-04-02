@@ -1,0 +1,59 @@
+You are updating my graduation project MVP "Memory Hub" built in Replit.
+
+Task 1 only:
+Add proper authentication UI flow with separate Login and Register pages.
+
+Important:
+Do NOT change unrelated parts of the app.
+Do NOT break existing pages, routing, styles, or LocalStorage logic.
+Keep the current visual style, color palette, spacing, sidebar style, and component design consistent with the existing app.
+
+Requirements:
+1. Create a Login page.
+2. Create a Register page.
+3. Add navigation between Login and Register.
+4. If the user is not authenticated, they should be redirected to Login before entering the main app.
+5. After successful login/register, redirect to the main dashboard.
+6. Keep this as MVP auth using LocalStorage only.
+7. Store users locally with simple structure such as:
+   - username
+   - email
+   - password
+8. Add basic validation:
+   - required fields
+   - invalid email format
+   - password minimum length
+   - duplicate email or username on register
+   - wrong credentials on login
+9. Show clean error messages in Russian.
+10. Keep all current app pages working after login.
+
+UI requirements:
+- Use the same Memory Hub visual identity already present in the project.
+- Centered auth card layout.
+- Clear headings and subtext in Russian.
+- Inputs with proper labels.
+- Primary button style matching the current purple theme.
+- Links:
+  - “Нет аккаунта? Зарегистрироваться”
+  - “Уже есть аккаунт? Войти”
+
+Routing requirements:
+- Add routes for:
+  - /login
+  - /register
+- Protect the main app routes so they require authentication.
+- Preserve current main routes and page structure.
+
+Behavior:
+- Register should create the user in LocalStorage and optionally log them in directly.
+- Login should authenticate against stored users.
+- Store current authenticated user in LocalStorage.
+- Add logout behavior from the sidebar/profile area.
+
+Build rules:
+- Do not import files that do not exist.
+- Ensure all import paths are correct.
+- The app must run with zero errors.
+- Keep the code clean and minimal.
+- At the end, show me exactly which files were created or changed.
