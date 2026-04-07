@@ -1,0 +1,82 @@
+Now that the core auth flow is fixed, I want you to improve the Memory Hub project in a careful, production-minded way without breaking the working app.
+
+Important rules:
+
+1. Do not break the current working startup, routing, or auth flow.
+2. Make changes incrementally and keep the app runnable after each step.
+3. If a feature is still MVP/mock, keep it honest and clearly implemented as a prototype.
+4. Preserve the project as a strong frontend graduation project.
+
+Main goals:
+
+1. Improve AI Chat
+
+* Make the AI Chat page feel much stronger and more realistic
+* Add a better chat layout and UX
+* Add suggested prompts / quick actions
+* Add loading state, empty state, and response cards
+* Make answers feel connected to the user’s stored memories
+* If real AI is not available, create a high-quality mock conversational flow based on local/project data
+* Make the feature visually impressive for demo/presentation
+
+2. Fix file adding / upload flow
+
+* The user must be able to add a file successfully in the MVP
+* If real backend upload is not implemented, create a reliable MVP behavior:
+
+  * select file
+  * save file metadata locally
+  * show file in the library/details
+  * display upload success feedback
+* Make the upload flow clear and usable
+* Prevent silent failure
+* Add visible validation and error/success messages
+
+3. Add light mode and dark mode
+
+* Implement a complete theme toggle
+* Both themes must look polished and modern
+* The interface should feel comfortable, premium, and interactive
+* Keep strong visual consistency across all pages
+* Save the selected theme in localStorage
+
+4. Strengthen semantic / meaning-based search
+
+* Improve the search experience so it feels more like search by meaning, not only by exact keyword
+* For MVP, if real embeddings/vector search are not available, implement a better semantic-like scoring approach using:
+
+  * tags
+  * title/content matching
+  * related words
+  * memory type
+  * extracted metadata
+* Make search results feel smarter and more relevant
+* Add better result cards, highlights, filters, and ranking
+* Clearly structure the code so this can later be replaced with real vector search
+
+5. Preserve and improve graduation-project value
+
+* Keep emphasis on frontend architecture, UI, user flows, and modular design
+* Improve the practical demonstration value of the app
+* Make the project feel convincing for a university defense
+
+Required deliverables:
+
+* working AI Chat improvements
+* working file-add/upload MVP flow
+* theme switcher (light/dark)
+* stronger semantic-like search
+* no broken auth
+* no broken startup
+* no broken routing
+
+Execution requirements:
+
+* First inspect the current code and identify the safest files to update
+* Then implement features carefully
+* After changes, verify the app still runs correctly
+* Briefly report:
+
+  1. what you changed
+  2. which files were changed
+  3. what is real MVP behavior vs mock behavior

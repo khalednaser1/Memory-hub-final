@@ -1,10 +1,12 @@
 import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { 
-  Brain, Plus, Library, Search, Network, LogOut, Menu, X, 
-  Calendar, MessageSquare, Settings as SettingsIcon, LayoutDashboard, Tag
+import {
+  Brain, Plus, Library, Search, Network, LogOut, Menu, X,
+  Calendar, MessageSquare, Settings as SettingsIcon, LayoutDashboard,
+  Tag, Sun, Moon
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useTheme } from "@/contexts/theme-context";
 import { CommandMenu } from "./command-menu";
 import { Button } from "@/components/ui/button";
 
@@ -14,6 +16,7 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCommandOpen, setIsCommandOpen] = useState(false);
@@ -29,7 +32,6 @@ export function Layout({ children }: LayoutProps) {
     return () => document.removeEventListener("keydown", down);
   }, []);
 
-  // Close mobile menu on route change
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location]);
@@ -104,7 +106,7 @@ export function Layout({ children }: LayoutProps) {
           })}
         </nav>
 
-        <div className="p-4 border-t border-border/50 mt-auto space-y-2">
+        <div className="p-4 border-t border-border/50 mt-auto space-y-1">
           <Link
             href="/settings"
             className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ${
@@ -116,6 +118,17 @@ export function Layout({ children }: LayoutProps) {
             <SettingsIcon className="w-5 h-5" />
             Настройки
           </Link>
+
+          {/* Theme toggle */}
+          <button
+            onClick={toggleTheme}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors text-sm text-left"
+            title={theme === "dark" ? "Светлая тема" : "Тёмная тема"}
+          >
+            {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            {theme === "dark" ? "Светлая тема" : "Тёмная тема"}
+          </button>
+
           <div className="flex items-center justify-between px-3 py-2">
             <div className="flex items-center gap-3 truncate">
               <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm shrink-0">
@@ -142,9 +155,12 @@ export function Layout({ children }: LayoutProps) {
           </div>
           Memory Hub
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon" onClick={() => setIsCommandOpen(true)}>
             <Search className="w-5 h-5 text-muted-foreground" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={toggleTheme}>
+            {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </Button>
           <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
             {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

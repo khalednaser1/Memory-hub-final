@@ -84,6 +84,14 @@
   .glass {
     @apply bg-background/70 backdrop-blur-xl border border-border/50;
   }
+
+  .hide-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
   
   .glass-card {
     @apply bg-card/60 backdrop-blur-md border border-white/10 dark:border-white/5 shadow-xl shadow-black/5;
