@@ -21,27 +21,30 @@ function tokenize(text: string): string[] {
 }
 
 function computeTokenOverlap(query: string, text: string): number {
-  const queryTokens = new Set(tokenize(query));
+  const queryTokens = tokenize(query);
+  const querySet: Record<string, boolean> = {};
+  queryTokens.forEach(t => { querySet[t] = true; });
   const textTokens = tokenize(text);
   
   let matches = 0;
   textTokens.forEach(token => {
-    if (queryTokens.has(token)) matches++;
+    if (querySet[token]) matches++;
   });
   
-  return queryTokens.size > 0 ? matches / queryTokens.size : 0;
+  return queryTokens.length > 0 ? matches / queryTokens.length : 0;
 }
 
 function findSynonymMatches(query: string, text: string): number {
   const queryTokens = tokenize(query);
-  const textTokens = new Set(tokenize(text));
+  const textTokenSet: Record<string, boolean> = {};
+  tokenize(text).forEach(t => { textTokenSet[t] = true; });
   
   let synonymMatches = 0;
   
   queryTokens.forEach(token => {
     if (SYNONYMS[token]) {
       SYNONYMS[token].forEach(synonym => {
-        if (textTokens.has(synonym)) {
+        if (textTokenSet[synonym]) {
           synonymMatches++;
         }
       });
@@ -52,12 +55,13 @@ function findSynonymMatches(query: string, text: string): number {
 }
 
 function computeTagOverlap(queryTokens: string[], memory: Memory): number {
-  const memoryTagsLower = memory.tags.map(t => t.toLowerCase());
-  const querySet = new Set(queryTokens);
+  const memoryTagsLower = memory.tags.map((t: string) => t.toLowerCase());
+  const querySet: Record<string, boolean> = {};
+  queryTokens.forEach(t => { querySet[t] = true; });
   
   let matches = 0;
   memoryTagsLower.forEach(tag => {
-    querySet.forEach(token => {
+    queryTokens.forEach(token => {
       if (tag.includes(token) || token.includes(tag)) {
         matches++;
       }
@@ -148,15 +152,15 @@ export function extractEntities(text: string) {
 
   // Simple capitalized word detection for people
   const capitalizedWords = text.match(/\b[A-ЯЁ][a-яё]+(?:\s+[A-ЯЁ][a-яё]+)*/g) || [];
-  entities.people = [...new Set(capitalizedWords)].slice(0, 5);
+  entities.people = Array.from(new Set(capitalizedWords)).slice(0, 5);
 
   // Simple date patterns (YYYY, DD.MM, etc)
   const dates = text.match(/\b(\d{4}|\d{1,2}\.\d{1,2}\.\d{2,4}|\d{1,2}\/\d{1,2}\/\d{2,4})\b/g) || [];
-  entities.dates = [...new Set(dates)];
+  entities.dates = Array.from(new Set(dates));
 
   // Email detection
   const emails = text.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g) || [];
-  entities.emails = [...new Set(emails)];
+  entities.emails = Array.from(new Set(emails));
 
   return entities;
 }

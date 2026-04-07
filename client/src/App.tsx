@@ -1,4 +1,5 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
+import { ReactNode, useEffect } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -10,6 +11,7 @@ import { useAuth } from "@/hooks/use-auth";
 // Pages
 import Home from "./pages/home";
 import Login from "./pages/login";
+import Register from "./pages/register";
 import Dashboard from "./pages/dashboard";
 import Capture from "./pages/capture";
 import Library from "./pages/library";
@@ -19,16 +21,43 @@ import Connections from "./pages/connections";
 import Timeline from "./pages/timeline";
 import Chat from "./pages/chat";
 import Settings from "./pages/settings";
+import Tags from "./pages/tags";
+
+const PUBLIC_PATHS = ["/", "/login", "/register"];
+
+function AuthGuard({ children }: { children: ReactNode }) {
+  const { user, isLoaded } = useAuth();
+  const [location, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    if (!user && !PUBLIC_PATHS.includes(location)) {
+      setLocation("/login");
+    }
+  }, [user, isLoaded, location, setLocation]);
+
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
 
 function Router() {
   const { user } = useAuth();
 
   return (
     <Switch>
+      {/* Public routes */}
       <Route path="/" component={user ? Dashboard : Home} />
       <Route path="/login" component={Login} />
-      
-      {/* Protected-ish routes wrapped in Layout */}
+      <Route path="/register" component={Register} />
+
+      {/* Protected routes */}
       <Route path="/dashboard">
         {() => <Layout><Dashboard /></Layout>}
       </Route>
@@ -53,11 +82,13 @@ function Router() {
       <Route path="/connections">
         {() => <Layout><Connections /></Layout>}
       </Route>
+      <Route path="/tags">
+        {() => <Layout><Tags /></Layout>}
+      </Route>
       <Route path="/settings">
         {() => <Layout><Settings /></Layout>}
       </Route>
 
-      {/* Fallback to 404 */}
       <Route>
         {() => user ? <Layout><NotFound /></Layout> : <NotFound />}
       </Route>
@@ -69,7 +100,9 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Router />
+        <AuthGuard>
+          <Router />
+        </AuthGuard>
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, buildUrl, type MemoryResponse, type SearchResponse, type CreateMemoryRequest, type UpdateMemoryRequest } from "@shared/routes";
+import { api, buildUrl } from "@shared/routes";
+import { type MemoryResponse, type SearchResponse, type CreateMemoryRequest, type UpdateMemoryRequest } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 
 async function fetchApi<T>(path: string, options: RequestInit = {}): Promise<T> {

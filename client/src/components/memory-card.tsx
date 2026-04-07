@@ -2,7 +2,7 @@ import { Link } from "wouter";
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
 import { FileText, Link as LinkIcon, Image as ImageIcon, Hash, Calendar, User } from "lucide-react";
-import { type MemoryResponse } from "@shared/routes";
+import { type MemoryResponse } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
 
 export function MemoryCard({ memory, highlightReason }: { memory: MemoryResponse & { relevanceScore?: number, matchReason?: string }, highlightReason?: boolean }) {

@@ -7,10 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 
-export default function Login() {
-  const { login, loginDemo } = useAuth();
-  const [identifier, setIdentifier] = useState("");
+export default function Register() {
+  const { register } = useAuth();
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -18,29 +20,18 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setIsLoading(true);
 
-    // Small UX delay
+    if (password !== confirm) {
+      setError("Пароли не совпадают");
+      return;
+    }
+
+    setIsLoading(true);
     await new Promise(r => setTimeout(r, 300));
 
-    if (!identifier.trim()) {
-      setError("Введите имя пользователя или email");
-      setIsLoading(false);
-      return;
-    }
-    if (!password) {
-      setError("Введите пароль");
-      setIsLoading(false);
-      return;
-    }
-
-    const err = login(identifier, password);
+    const err = register(username, email, password);
     if (err) setError(err);
     setIsLoading(false);
-  };
-
-  const handleDemoLogin = () => {
-    loginDemo("Демо");
   };
 
   return (
@@ -61,8 +52,10 @@ export default function Login() {
 
           {/* Heading */}
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold tracking-tight mb-2">Вход в Memory Hub</h1>
-            <p className="text-muted-foreground text-sm">Введите свои данные для входа</p>
+            <h1 className="text-2xl font-bold tracking-tight mb-2">Создать аккаунт</h1>
+            <p className="text-muted-foreground text-sm">
+              Начните вести свою личную базу знаний
+            </p>
           </div>
 
           {/* Error */}
@@ -72,36 +65,45 @@ export default function Login() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="identifier" className="text-sm font-medium ml-1">
-                Email или имя пользователя
-              </Label>
+              <Label htmlFor="username" className="text-sm font-medium ml-1">Имя пользователя</Label>
               <Input
-                id="identifier"
+                id="username"
                 type="text"
-                placeholder="alex или alex@example.com"
+                placeholder="alex"
                 className="h-12 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-primary transition-all text-base px-4"
-                value={identifier}
-                onChange={e => { setIdentifier(e.target.value); setError(null); }}
+                value={username}
+                onChange={e => { setUsername(e.target.value); setError(null); }}
                 autoFocus
                 autoComplete="username"
               />
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-sm font-medium ml-1">Пароль</Label>
-              </div>
+              <Label htmlFor="email" className="text-sm font-medium ml-1">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="alex@example.com"
+                className="h-12 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-primary transition-all text-base px-4"
+                value={email}
+                onChange={e => { setEmail(e.target.value); setError(null); }}
+                autoComplete="email"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-sm font-medium ml-1">Пароль</Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Введите пароль"
+                  placeholder="Минимум 6 символов"
                   className="h-12 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-primary transition-all text-base px-4 pr-12"
                   value={password}
                   onChange={e => { setPassword(e.target.value); setError(null); }}
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                 />
                 <button
                   type="button"
@@ -113,40 +115,33 @@ export default function Login() {
               </div>
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="confirm" className="text-sm font-medium ml-1">Повторите пароль</Label>
+              <Input
+                id="confirm"
+                type={showPassword ? "text" : "password"}
+                placeholder="Повторите пароль"
+                className="h-12 rounded-xl bg-muted/50 border-transparent focus:bg-background focus:border-primary transition-all text-base px-4"
+                value={confirm}
+                onChange={e => { setConfirm(e.target.value); setError(null); }}
+                autoComplete="new-password"
+              />
+            </div>
+
             <Button
               type="submit"
-              className="w-full h-12 rounded-xl text-base shadow-lg shadow-primary/20 hover:shadow-xl transition-all"
+              className="w-full h-12 rounded-xl text-base shadow-lg shadow-primary/20 hover:shadow-xl transition-all mt-2"
               disabled={isLoading}
             >
-              {isLoading ? "Вход..." : <>Войти <ArrowRight className="ml-2 w-4 h-4" /></>}
+              {isLoading ? "Создание аккаунта..." : <>Зарегистрироваться <ArrowRight className="ml-2 w-4 h-4" /></>}
             </Button>
           </form>
 
-          {/* Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border/50" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-3 text-muted-foreground">или</span>
-            </div>
-          </div>
-
-          {/* Demo login */}
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full h-12 rounded-xl text-base"
-            onClick={handleDemoLogin}
-          >
-            Войти в демо-режиме
-          </Button>
-
-          {/* Register link */}
+          {/* Login link */}
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            Нет аккаунта?{" "}
-            <Link href="/register" className="text-primary hover:underline font-medium">
-              Зарегистрироваться
+            Уже есть аккаунт?{" "}
+            <Link href="/login" className="text-primary hover:underline font-medium">
+              Войти
             </Link>
           </p>
         </div>

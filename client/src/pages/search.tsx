@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
-import type { MemoryResponse } from "@shared/routes";
+import type { MemoryResponse, SearchResult as SchemaSearchResult } from "@shared/schema";
 
 type SearchResult = MemoryResponse & { relevanceScore?: number; matchReason?: string };
 

@@ -93,7 +93,7 @@ export default function Settings() {
         <div className="space-y-4">
           <div>
             <p className="text-sm text-muted-foreground">Пользователь</p>
-            <p className="text-lg font-medium">{user || "—"}</p>
+            <p className="text-lg font-medium">{user?.username || "—"}</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Всего воспоминаний</p>

@@ -88,19 +88,40 @@ export async function registerRoutes(
     const existing = await storage.getMemories();
     if (existing.length === 0) {
       await storage.createMemory({
-        title: "Practice document",
-        content: "Detailed practice document outlining the work done during the summer internship at the startup.",
-        tags: ["work", "report", "internship"],
+        title: "Отчёт по практике",
+        type: "text",
+        content: "Подробный отчёт о работе, проделанной за время летней практики на стартапе. Задачи: разработка API, интеграция БД, участие в код-ревью.",
+        tags: ["работа", "отчёт", "практика"],
       });
       await storage.createMemory({
-        title: "React Hooks Guide",
-        content: "Useful links and patterns for React useEffect and useState to prevent unnecessary re-renders.",
-        tags: ["frontend", "react"],
+        title: "React Hooks — полный гайд",
+        type: "text",
+        content: "Полезные паттерны использования useEffect и useState для оптимизации ре-рендеров. Советы по мемоизации с useMemo и useCallback.",
+        tags: ["фронтенд", "react", "программирование"],
       });
       await storage.createMemory({
-        title: "Project Ideas 2024",
-        content: "Brainstorming for side projects. Maybe an intelligent personal memory app?",
-        tags: ["ideas", "2024"],
+        title: "Идеи проектов 2024",
+        type: "text",
+        content: "Брейнсторм по пет-проектам. Возможно, сделать интеллектуальное приложение личной памяти? Или планировщик с ИИ-помощником?",
+        tags: ["идеи", "2024", "проекты"],
+      });
+      await storage.createMemory({
+        title: "Архитектура Memory Hub",
+        type: "text",
+        content: "Дипломный проект: система управления личными воспоминаниями. Стек: React + Vite + TypeScript + Express. Ключевые фичи: семантический поиск, граф связей, ИИ-ассистент.",
+        tags: ["диплом", "проекты", "архитектура"],
+      });
+      await storage.createMemory({
+        title: "Дизайн-ресурсы",
+        type: "link",
+        content: "https://dribbble.com — лучший источник вдохновения для UI-дизайна. Много паттернов SaaS дашбордов.",
+        tags: ["дизайн", "ресурсы", "ui"],
+      });
+      await storage.createMemory({
+        title: "Алгоритм семантического поиска",
+        type: "text",
+        content: "Mock-реализация семантического поиска без внешних LLM: токенизация, пересечение слов, синонимы, бонус за свежесть. Позволяет ранжировать результаты по релевантности.",
+        tags: ["алгоритм", "поиск", "ml", "программирование"],
       });
     }
   }
