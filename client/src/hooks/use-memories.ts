@@ -2,9 +2,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl } from "@shared/routes";
 import { type MemoryResponse, type SearchResponse, type CreateMemoryRequest, type UpdateMemoryRequest, type ChatRequest, type ChatResponse } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { withApiBase } from "@/lib/api-base";
 
 async function fetchApi<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(path, {
+  const res = await fetch(withApiBase(path), {
     ...options,
     headers: {
       "Content-Type": "application/json",
@@ -18,7 +19,7 @@ async function fetchApi<T>(path: string, options: RequestInit = {}): Promise<T> 
     try {
       const data = await res.json();
       message = data.message || message;
-    } catch { /* Ignore */ }
+    } catch {}
     throw new Error(message);
   }
 
@@ -125,7 +126,7 @@ export async function uploadFile(file: File): Promise<{
 }> {
   const formData = new FormData();
   formData.append("file", file);
-  const res = await fetch(api.upload.path, {
+  const res = await fetch(withApiBase(api.upload.path), {
     method: api.upload.method,
     body: formData,
     credentials: "include",
@@ -146,7 +147,7 @@ export async function fetchLinkMeta(url: string): Promise<{
   success: boolean;
   error?: string;
 }> {
-  const res = await fetch(api.fetchLink.path, {
+  const res = await fetch(withApiBase(api.fetchLink.path), {
     method: api.fetchLink.method,
     headers: { "Content-Type": "application/json" },
     credentials: "include",
