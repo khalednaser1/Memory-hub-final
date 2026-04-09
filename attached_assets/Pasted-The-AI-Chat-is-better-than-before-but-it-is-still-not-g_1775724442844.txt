@@ -1,0 +1,50 @@
+The AI Chat is better than before, but it is still not good enough.
+
+I tested it with real prompts, and the remaining weaknesses are now very clear.
+
+Current problems:
+
+1. target resolution is still unreliable
+
+   * when I ask about a specific file like “PDF Memory_Hub(1)”, the assistant may answer using the wrong file
+2. summary behavior is still weak
+
+   * when I ask for a summary, it often dumps content from one item instead of synthesizing a real summary
+3. comparison behavior is still weak
+
+   * when I ask to compare Notion and Obsidian, it returns related materials instead of making an explicit comparison
+4. retrieval is better, but reasoning and answer synthesis are still not strong enough
+
+Examples from testing:
+
+* “Что содержится в PDF Memory_Hub(1)?” → answered using the wrong file
+* “Сделай краткое summary того, что у меня есть по управлению знаниями” → returned raw content instead of a synthesized summary
+* “Сравни Notion и Obsidian по моим материалам” → returned materials/snippets instead of a direct comparison
+* “Какие ссылки у меня есть по дизайну?” → this one worked well
+
+What I need now:
+
+1. improve target resolution so the assistant reliably identifies the exact file/link/memory being asked about
+2. improve summary generation so the assistant synthesizes across relevant memories instead of dumping one memory
+3. improve comparison behavior so it explicitly compares two concepts/items using the retrieved materials
+4. keep list behavior working well for direct list questions
+5. keep answers structured as:
+
+   * direct answer
+   * short explanation
+   * optional sources
+
+Important:
+
+* do not redesign the UI
+* focus only on assistant behavior
+* do not make answers verbose
+* do not return raw memory dumps when the user asked for reasoning, summary, or comparison
+
+Goal:
+Make the assistant strong at:
+
+* exact target questions
+* summary questions
+* comparison questions
+  while preserving the good list behavior that already works.
