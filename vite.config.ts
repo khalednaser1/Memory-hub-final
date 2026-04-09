@@ -13,9 +13,6 @@ export default defineConfig({
           await import("@replit/vite-plugin-cartographer").then((m) =>
             m.cartographer(),
           ),
-          await import("@replit/vite-plugin-dev-banner").then((m) =>
-            m.devBanner(),
-          ),
         ]
       : []),
   ],
@@ -32,6 +29,7 @@ export default defineConfig({
     emptyOutDir: true,
   },
   server: {
+    allowedHosts: true,
     fs: {
       strict: true,
       deny: ["**/.*"],
