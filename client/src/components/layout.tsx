@@ -44,22 +44,22 @@ export function Layout({ children }: LayoutProps) {
   const initials = displayName.substring(0, 2).toUpperCase();
 
   const navItems = [
-    { href: "/dashboard",   icon: LayoutDashboard, label: "Главная"        },
-    { href: "/library",     icon: Library,          label: "Библиотека"     },
-    { href: "/timeline",    icon: Calendar,         label: "Шкала времени"  },
-    { href: "/search",      icon: Search,           label: "Поиск"          },
-    { href: "/chat",        icon: MessageSquare,    label: "Чат"            },
-    { href: "/tags",        icon: Tag,              label: "Теги"           },
+    { href: "/dashboard",   icon: LayoutDashboard, label: "Главная"       },
+    { href: "/library",     icon: Library,          label: "Библиотека"    },
+    { href: "/timeline",    icon: Calendar,         label: "Шкала времени" },
+    { href: "/search",      icon: Search,           label: "Поиск"         },
+    { href: "/chat",        icon: MessageSquare,    label: "Чат"           },
+    { href: "/tags",        icon: Tag,              label: "Теги"          },
     { href: "/connections", icon: Network,          label: "Связи"         },
   ];
 
   return (
     <div className="flex h-screen bg-background overflow-hidden selection:bg-primary/20">
-      <aside className="hidden md:flex flex-col w-[260px] border-r border-border/40 bg-card/40 backdrop-blur-xl relative z-20">
-        <div className="p-5 pb-1">
-          <Link href="/dashboard" className="flex items-center gap-3 font-bold text-lg text-foreground hover:opacity-80 transition-opacity group" data-testid="link-home">
+      <aside className="hidden md:flex flex-col w-[260px] border-r border-border/60 bg-[hsl(var(--sidebar-bg))] relative z-20">
+        <div className="p-5 pb-2">
+          <Link href="/dashboard" className="flex items-center gap-3 font-bold text-[15px] text-foreground hover:opacity-80 transition-opacity group" data-testid="link-home">
             <div className="relative">
-              <div className="bg-gradient-to-br from-primary to-purple-600 dark:from-primary dark:to-purple-500 p-2 rounded-xl text-white shadow-lg shadow-primary/25 group-hover:shadow-primary/40 transition-shadow">
+              <div className="bg-gradient-to-br from-primary to-purple-600 dark:from-primary dark:to-purple-500 p-2 rounded-xl text-white shadow-md shadow-primary/25 group-hover:shadow-primary/40 transition-shadow">
                 <Brain className="w-5 h-5" />
               </div>
             </div>
@@ -67,10 +67,10 @@ export function Layout({ children }: LayoutProps) {
           </Link>
         </div>
 
-        <div className="px-3 py-4">
-          <Button asChild className="w-full shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all rounded-xl h-10 font-medium" size="default" data-testid="button-add-memory">
+        <div className="px-3 pb-3">
+          <Button asChild className="w-full shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all rounded-xl h-9 text-[13px] font-semibold" size="default" data-testid="button-add-memory">
             <Link href="/capture">
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-3.5 h-3.5 mr-2" />
               Добавить
             </Link>
           </Button>
@@ -79,15 +79,17 @@ export function Layout({ children }: LayoutProps) {
         <nav className="flex-1 px-3 py-1 space-y-0.5 overflow-y-auto">
           <button
             onClick={() => setIsCommandOpen(true)}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-all text-sm text-left mb-3 group"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-muted-foreground hover:bg-muted/70 hover:text-foreground transition-all text-[12.5px] text-left mb-2.5 group"
             data-testid="button-quick-search"
           >
-            <Search className="w-4 h-4" />
+            <Search className="w-3.5 h-3.5" />
             <span className="flex-1">Быстрый поиск</span>
-            <kbd className="hidden lg:inline-flex items-center gap-0.5 rounded-md bg-muted/80 px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground/70 border border-border/50">
+            <kbd className="hidden lg:inline-flex items-center gap-0.5 rounded bg-muted/80 px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground/60 border border-border/60">
               <span className="text-[10px]">⌘</span>K
             </kbd>
           </button>
+
+          <p className="section-label px-3 mb-1.5">Навигация</p>
 
           {navItems.map(item => {
             const isActive = location === item.href;
@@ -95,28 +97,28 @@ export function Layout({ children }: LayoutProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-medium ${
+                className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200 text-[13px] ${
                   isActive
-                    ? "bg-primary/10 text-primary shadow-sm"
-                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                    ? "bg-primary/12 text-primary font-semibold shadow-sm"
+                    : "text-muted-foreground font-medium hover:bg-muted/70 hover:text-foreground"
                 }`}
                 data-testid={`link-nav-${item.href.slice(1)}`}
               >
-                <item.icon className={`w-4 h-4 ${isActive ? 'text-primary' : ''}`} />
-                {item.label}
-                {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
+                <item.icon className={`w-4 h-4 shrink-0 ${isActive ? "text-primary" : ""}`} />
+                <span className="flex-1">{item.label}</span>
+                {isActive && <div className="w-1.5 h-1.5 rounded-full bg-primary" />}
               </Link>
             );
           })}
         </nav>
 
-        <div className="p-3 border-t border-border/30 mt-auto space-y-0.5">
+        <div className="p-3 border-t border-border/50 mt-auto space-y-0.5">
           <Link
             href="/settings"
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-medium ${
+            className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200 text-[13px] ${
               location === "/settings"
-                ? "bg-primary/10 text-primary shadow-sm"
-                : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                ? "bg-primary/12 text-primary font-semibold"
+                : "text-muted-foreground font-medium hover:bg-muted/70 hover:text-foreground"
             }`}
             data-testid="link-settings"
           >
@@ -126,7 +128,7 @@ export function Layout({ children }: LayoutProps) {
 
           <button
             onClick={toggleTheme}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-all text-[13px] text-left font-medium"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-muted-foreground hover:bg-muted/70 hover:text-foreground transition-all text-[13px] text-left font-medium"
             title={theme === "dark" ? "Светлая тема" : "Тёмная тема"}
             data-testid="button-toggle-theme"
           >
@@ -134,21 +136,21 @@ export function Layout({ children }: LayoutProps) {
             {theme === "dark" ? "Светлая тема" : "Тёмная тема"}
           </button>
 
-          <div className="flex items-center justify-between px-3 py-2.5 mt-2 rounded-xl bg-muted/30">
-            <div className="flex items-center gap-3 truncate">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-purple-600 text-white flex items-center justify-center font-semibold text-xs shrink-0 shadow-sm">
+          <div className="flex items-center justify-between px-3 py-2.5 mt-1.5 rounded-xl bg-muted/40 border border-border/40">
+            <div className="flex items-center gap-2.5 truncate">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-purple-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-sm">
                 {initials}
               </div>
               <div className="min-w-0">
-                <span className="text-sm font-medium truncate block leading-tight">{displayName}</span>
-                <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                <span className="text-[13px] font-semibold truncate block leading-tight text-foreground">{displayName}</span>
+                <span className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
                   <Zap className="w-2.5 h-2.5" />Активен
                 </span>
               </div>
             </div>
             <button
               onClick={logout}
-              className="text-muted-foreground hover:text-destructive transition-colors p-1.5 rounded-lg hover:bg-destructive/10"
+              className="text-muted-foreground hover:text-destructive transition-colors p-1.5 rounded-lg hover:bg-destructive/10 shrink-0"
               aria-label="Выйти"
               data-testid="button-logout"
             >
@@ -158,7 +160,7 @@ export function Layout({ children }: LayoutProps) {
         </div>
       </aside>
 
-      <header className="md:hidden fixed top-0 left-0 right-0 h-14 border-b border-border/30 bg-background/90 backdrop-blur-xl z-30 flex items-center justify-between px-4">
+      <header className="md:hidden fixed top-0 left-0 right-0 h-14 border-b border-border/50 bg-background/90 backdrop-blur-xl z-30 flex items-center justify-between px-4">
         <Link href="/dashboard" className="flex items-center gap-2.5 font-bold text-base" data-testid="link-mobile-home">
           <div className="bg-gradient-to-br from-primary to-purple-600 text-white p-1.5 rounded-lg shadow-sm">
             <Brain className="w-4 h-4" />

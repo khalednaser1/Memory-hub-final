@@ -347,8 +347,8 @@ export default function Chat() {
                   <div className={`max-w-[80%] space-y-2 ${msg.role === "user" ? "items-end" : "items-start"} flex flex-col`}>
                     <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed relative ${
                       msg.role === "user"
-                        ? "bg-gradient-to-br from-primary to-primary/85 text-primary-foreground rounded-tr-md shadow-md shadow-primary/15"
-                        : "bg-card border border-border/40 text-foreground rounded-tl-md"
+                        ? "bg-gradient-to-br from-primary to-primary/85 text-primary-foreground rounded-tr-md shadow-lg shadow-primary/20"
+                        : "bg-card border border-border/50 text-foreground rounded-tl-md shadow-sm shadow-black/[0.04] dark:shadow-black/[0.2]"
                     }`}>
                       {msg.role === "assistant" && !msg.isTyping && (
                         <div className="absolute left-0 top-3 bottom-3 w-0.5 bg-primary/30 rounded-full -ml-px" />
@@ -364,7 +364,7 @@ export default function Chat() {
 
                     {msg.sources && msg.sources.length > 0 && !msg.isTyping && (
                       <div className="w-full">
-                        <div className="bg-muted/30 border border-border/30 rounded-xl p-3 space-y-1.5">
+                        <div className="bg-muted/40 border border-border/50 rounded-xl p-3 space-y-1.5 shadow-sm shadow-black/[0.03]">
                           <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 mb-2">
                             <Layers className="w-3 h-3" />Источники
                           </p>

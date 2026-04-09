@@ -229,13 +229,17 @@ export default function Search() {
       <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="flex flex-col md:flex-row gap-3 items-start md:items-center shrink-0">
         <div className="flex-1 relative">
           <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none z-10">
-            <SearchIcon className="w-4.5 h-4.5 text-muted-foreground" />
+            <SearchIcon className={`w-4 h-4 transition-colors duration-200 ${query ? "text-primary" : "text-muted-foreground"}`} />
           </div>
           <Input
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Опишите, что вы ищете..."
-            className="pl-11 pr-24 h-12 text-sm bg-card border-border/30 focus-visible:ring-primary/30 rounded-xl shadow-sm"
+            className={`pl-11 pr-24 h-12 text-sm rounded-xl shadow-sm transition-all duration-200 ${
+              query
+                ? "bg-card border-primary/30 focus-visible:ring-primary/25 shadow-md shadow-primary/5"
+                : "bg-card border-border/50 focus-visible:ring-primary/25"
+            }`}
             data-testid="input-search"
           />
           <div className="absolute inset-y-0 right-3 flex items-center gap-2 pointer-events-none">
@@ -290,7 +294,7 @@ export default function Search() {
       )}
 
       <div className="flex-1 min-h-0 flex gap-4">
-        <div className="w-full md:w-[42%] flex flex-col min-h-0">
+        <div className={`w-full md:w-[42%] flex flex-col min-h-0 transition-all duration-300 ${debouncedQuery && results.length > 0 ? "opacity-100" : "opacity-100"}`}>
           <div className="flex-1 overflow-y-auto pr-1 space-y-2">
             {!debouncedQuery ? (
               <motion.div
@@ -346,7 +350,7 @@ export default function Search() {
           </div>
         </div>
 
-        <div className="hidden md:flex flex-1 min-h-0 bg-card border border-border/30 rounded-xl overflow-hidden flex-col">
+        <div className="hidden md:flex flex-1 min-h-0 bg-card border border-border/50 rounded-xl overflow-hidden flex-col shadow-sm shadow-black/[0.04] dark:shadow-black/[0.15]">
           {selected ? (
             <PreviewPanel memory={selected} />
           ) : debouncedQuery ? (

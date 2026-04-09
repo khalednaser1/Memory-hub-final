@@ -27,9 +27,20 @@ function NodeGraph({ nodes }: { nodes: { label: string; count: number; color: st
           <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.2" />
           <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
         </radialGradient>
-        <filter id="blur-glow">
-          <feGaussianBlur stdDeviation="3" result="blur" />
-          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+        <radialGradient id="nodeBlue" cx="35%" cy="30%" r="65%">
+          <stop offset="0%" stopColor="hsl(217, 95%, 72%)" stopOpacity="1" />
+          <stop offset="100%" stopColor="hsl(217, 91%, 52%)" stopOpacity="1" />
+        </radialGradient>
+        <radialGradient id="nodeAmber" cx="35%" cy="30%" r="65%">
+          <stop offset="0%" stopColor="hsl(43, 96%, 66%)" stopOpacity="1" />
+          <stop offset="100%" stopColor="hsl(43, 90%, 46%)" stopOpacity="1" />
+        </radialGradient>
+        <radialGradient id="nodeHub" cx="35%" cy="30%" r="65%">
+          <stop offset="0%" stopColor="hsl(252, 80%, 75%)" stopOpacity="1" />
+          <stop offset="100%" stopColor="hsl(252, 80%, 52%)" stopOpacity="1" />
+        </radialGradient>
+        <filter id="node-shadow" x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="0" dy="1.5" stdDeviation="2" floodColor="rgba(0,0,0,0.18)" />
         </filter>
       </defs>
 
@@ -52,28 +63,29 @@ function NodeGraph({ nodes }: { nodes: { label: string; count: number; color: st
         );
       })}
 
-      <circle cx={cx} cy={cy} r={22} fill="hsl(var(--primary) / 0.12)" stroke="hsl(var(--primary) / 0.3)" strokeWidth="1.5" />
-      <text x={cx} y={cy + 1} textAnchor="middle" dominantBaseline="middle" fontSize="11" fill="hsl(var(--primary))" fontWeight="600">Hub</text>
+      <circle cx={cx} cy={cy} r={26} fill="url(#nodeHub)" filter="url(#node-shadow)" />
+      <text x={cx} y={cy + 1} textAnchor="middle" dominantBaseline="middle" fontSize="10" fill="white" fontWeight="700">Hub</text>
 
       {displayed.map((node, i) => {
         const angle = (i / displayed.length) * 2 * Math.PI - Math.PI / 2;
         const x = cx + Math.cos(angle) * radius;
         const y = cy + Math.sin(angle) * radius;
-        const nodeR = 6 + (node.count / maxCount) * 10;
+        const nodeR = 7 + (node.count / maxCount) * 10;
         const labelOffset = nodeR + 10;
         const labelX = cx + Math.cos(angle) * (radius + labelOffset);
         const labelY = cy + Math.sin(angle) * (radius + labelOffset);
+        const gradientId = node.color.includes("217") ? "nodeBlue" : "nodeAmber";
 
         return (
           <g key={`node-${i}`}>
-            <circle cx={x} cy={y} r={nodeR + 3} fill={node.color} fillOpacity="0.1" />
+            <circle cx={x} cy={y} r={nodeR + 4} fill={node.color} fillOpacity="0.12" />
             <circle
               cx={x} cy={y} r={nodeR}
-              fill={node.color}
-              fillOpacity="0.85"
+              fill={`url(#${gradientId})`}
               stroke="white"
-              strokeWidth="1"
-              strokeOpacity="0.4"
+              strokeWidth="1.5"
+              strokeOpacity="0.5"
+              filter="url(#node-shadow)"
             />
             <text
               x={labelX}
@@ -235,7 +247,7 @@ export default function Connections() {
 
           <motion.div variants={item} className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {statCards.map(card => (
-              <div key={card.label} className="bg-card border border-border/30 rounded-xl p-4 flex items-center gap-3">
+              <div key={card.label} className="bg-card border border-border/50 rounded-xl p-4 flex items-center gap-3 shadow-sm shadow-black/[0.04] dark:shadow-black/[0.2]">
                 <div className={`${card.bg} p-2 rounded-lg shrink-0`}>
                   <card.icon className={`w-4 h-4 ${card.color}`} />
                 </div>
@@ -248,7 +260,7 @@ export default function Connections() {
           </motion.div>
 
           {graphNodes.length > 0 && (
-            <motion.div variants={item} className="bg-card border border-border/30 rounded-2xl p-6">
+            <motion.div variants={item} className="bg-card border border-border/50 rounded-2xl p-6 shadow-sm shadow-black/[0.04] dark:shadow-black/[0.2]">
               <div className="flex items-center gap-2 mb-5">
                 <Brain className="w-4 h-4 text-primary" />
                 <h2 className="text-sm font-semibold text-foreground">Карта концепций</h2>
@@ -264,7 +276,7 @@ export default function Connections() {
           )}
 
           <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div className="bg-card border border-border/30 rounded-2xl p-5" data-testid="card-topics">
+            <div className="bg-card border border-border/50 rounded-2xl p-5 shadow-sm shadow-black/[0.04] dark:shadow-black/[0.2]" data-testid="card-topics">
               <h2 className="text-sm font-semibold mb-4 flex items-center gap-2 pb-3 border-b border-border/30">
                 <div className="p-1.5 rounded-lg bg-blue-500/10">
                   <Hash className="w-3.5 h-3.5 text-blue-500" />
@@ -283,7 +295,7 @@ export default function Connections() {
               )}
             </div>
 
-            <div className="bg-card border border-border/30 rounded-2xl p-5" data-testid="card-people">
+            <div className="bg-card border border-border/50 rounded-2xl p-5 shadow-sm shadow-black/[0.04] dark:shadow-black/[0.2]" data-testid="card-people">
               <h2 className="text-sm font-semibold mb-4 flex items-center gap-2 pb-3 border-b border-border/30">
                 <div className="p-1.5 rounded-lg bg-purple-500/10">
                   <User className="w-3.5 h-3.5 text-purple-500" />
@@ -302,7 +314,7 @@ export default function Connections() {
               )}
             </div>
 
-            <div className="bg-card border border-border/30 rounded-2xl p-5" data-testid="card-tags">
+            <div className="bg-card border border-border/50 rounded-2xl p-5 shadow-sm shadow-black/[0.04] dark:shadow-black/[0.2]" data-testid="card-tags">
               <h2 className="text-sm font-semibold mb-4 flex items-center gap-2 pb-3 border-b border-border/30">
                 <div className="p-1.5 rounded-lg bg-amber-500/10">
                   <Tag className="w-3.5 h-3.5 text-amber-500" />

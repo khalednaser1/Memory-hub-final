@@ -126,13 +126,14 @@ export default function Dashboard() {
         <motion.div variants={item} className="mb-8">
           <div className="flex items-start justify-between">
             <div>
+              <p className="section-label mb-2">Панель управления</p>
               <div className="flex items-center gap-2.5 mb-1.5">
-                <h1 className="text-3xl md:text-4xl font-bold tracking-tight" data-testid="text-dashboard-title">
+                <h1 className="text-3xl md:text-[2rem] font-bold tracking-tight" data-testid="text-dashboard-title">
                   Добро пожаловать
                 </h1>
-                <Sparkles className="w-6 h-6 text-primary animate-pulse-slow" />
+                <Sparkles className="w-5 h-5 text-primary animate-pulse-slow" />
               </div>
-              <p className="text-muted-foreground">Ваша персональная база знаний под контролем</p>
+              <p className="meta-text">Ваша персональная база знаний под контролем</p>
             </div>
             <Button asChild className="hidden md:flex rounded-xl h-9 text-sm gap-1.5 shadow-lg shadow-primary/20" data-testid="button-new-memory">
               <Link href="/capture"><Plus className="w-4 h-4" />Новое</Link>
@@ -141,13 +142,13 @@ export default function Dashboard() {
         </motion.div>
 
         <motion.div variants={item} className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <Card className="p-5 border-border/30 bg-card stat-card card-hover relative overflow-hidden" data-testid="card-stat-total">
+          <Card className="p-5 stat-card card-hover relative overflow-hidden shadow-sm shadow-black/[0.04] dark:shadow-black/[0.2] border-border/50" data-testid="card-stat-total">
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary/40 via-primary to-purple-500/40" />
             <div className="flex items-center justify-between relative z-10">
               <div>
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Всего</p>
+                <p className="section-label">Всего</p>
                 <p className="text-4xl font-bold text-foreground mt-1.5 tabular-nums">{total}</p>
-                <p className="text-[11px] text-muted-foreground mt-1">воспоминаний в базе</p>
+                <p className="meta-text mt-1">воспоминаний в базе</p>
               </div>
               <div className="bg-gradient-to-br from-primary/15 to-purple-500/15 p-3 rounded-2xl">
                 <Layers className="w-6 h-6 text-primary" />
@@ -155,13 +156,13 @@ export default function Dashboard() {
             </div>
           </Card>
 
-          <Card className="p-5 border-border/30 bg-card stat-card card-hover relative overflow-hidden" data-testid="card-stat-week">
+          <Card className="p-5 stat-card card-hover relative overflow-hidden shadow-sm shadow-black/[0.04] dark:shadow-black/[0.2] border-border/50" data-testid="card-stat-week">
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500/40 via-emerald-500 to-green-500/40" />
             <div className="flex items-center justify-between relative z-10 mb-3">
               <div>
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Неделя</p>
+                <p className="section-label">Неделя</p>
                 <p className="text-4xl font-bold text-foreground mt-1.5 tabular-nums">{thisWeekCount}</p>
-                <p className="text-[11px] text-muted-foreground mt-1">новых записей</p>
+                <p className="meta-text mt-1">новых записей</p>
               </div>
               <div className="bg-gradient-to-br from-emerald-500/15 to-green-500/15 p-3 rounded-2xl">
                 <TrendingUp className="w-6 h-6 text-emerald-500" />
@@ -170,11 +171,11 @@ export default function Dashboard() {
             <WeekActivity memories={memories || []} />
           </Card>
 
-          <Card className="p-5 border-border/30 bg-card stat-card card-hover relative overflow-hidden" data-testid="card-stat-tags">
+          <Card className="p-5 stat-card card-hover relative overflow-hidden shadow-sm shadow-black/[0.04] dark:shadow-black/[0.2] border-border/50" data-testid="card-stat-tags">
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-500/40 via-amber-500 to-orange-500/40" />
             <div className="flex items-center justify-between relative z-10">
               <div>
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Топ тег</p>
+                <p className="section-label">Топ тег</p>
                 <p className="text-2xl font-bold text-foreground mt-1.5 truncate max-w-[140px]">
                   {topTags.length > 0 ? `#${topTags[0][0]}` : "—"}
                 </p>
@@ -258,10 +259,10 @@ export default function Dashboard() {
             </div>
           )}
 
-          <Card className="p-5 border-border/30 bg-card" data-testid="card-by-type">
+          <Card className="p-5 shadow-sm shadow-black/[0.04] dark:shadow-black/[0.2] border-border/50" data-testid="card-by-type">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Распределение по типам</h3>
-              <span className="text-xs text-muted-foreground">{total} записей</span>
+              <h3 className="section-label">Распределение по типам</h3>
+              <span className="meta-text">{total} записей</span>
             </div>
             <div className="space-y-3.5">
               {typeData.map(stat => (
@@ -277,7 +278,7 @@ export default function Dashboard() {
           transition={{ duration: 0.4, delay: 0.3 }}
           className="space-y-5"
         >
-          <Card className="border-border/30 bg-card overflow-hidden" data-testid="card-quick-add">
+          <Card className="overflow-hidden shadow-sm shadow-black/[0.04] dark:shadow-black/[0.2] border-border/50" data-testid="card-quick-add">
             <div className="h-0.5 bg-gradient-to-r from-primary via-purple-500 to-primary/0" />
             <div className="p-5">
               <div className="flex items-center gap-2 mb-4">
@@ -312,7 +313,7 @@ export default function Dashboard() {
             </div>
           </Card>
 
-          <Card className="p-5 border-border/30 bg-card" data-testid="card-popular-tags">
+          <Card className="p-5 shadow-sm shadow-black/[0.04] dark:shadow-black/[0.2] border-border/50" data-testid="card-popular-tags">
             <div className="flex items-center gap-2 mb-4">
               <Tag className="w-4 h-4 text-muted-foreground" />
               <h3 className="text-sm font-semibold text-foreground">Популярные теги</h3>
