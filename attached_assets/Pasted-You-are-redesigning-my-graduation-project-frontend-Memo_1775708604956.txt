@@ -1,0 +1,338 @@
+You are redesigning my graduation project frontend: **Memory Hub**.
+
+Your mission is to transform the current UI into a **high-end, modern, emotionally immersive, interactive frontend experience** that looks like a serious premium product and clearly demonstrates strong frontend engineering and UI/UX skill.
+
+## Core goal
+
+Make the app feel like:
+
+* a real intelligent personal memory system
+* visually polished and memorable
+* modern, smooth, premium, and interactive
+* impressive for a university graduation defense
+* clearly stronger as a frontend project
+
+This is not just about “making it pretty”.
+I want the interface to feel like the user is entering their own memory space:
+calm, intelligent, personal, elegant, futuristic, and alive.
+
+---
+
+## Non-negotiable rules
+
+1. **Do not break the app**
+
+   * do not break routing
+   * do not break auth
+   * do not break startup
+   * do not break existing MVP flows
+   * keep the app runnable at all times
+
+2. **Do not do a random redesign**
+   Every visual change must improve:
+
+   * clarity
+   * hierarchy
+   * emotional feel
+   * interaction quality
+   * demo value
+
+3. **Do not make it childish or overdesigned**
+   Avoid:
+
+   * noisy gradients everywhere
+   * too many colors
+   * messy glassmorphism abuse
+   * game-like styling
+   * generic template look
+
+4. **Preserve graduation-project seriousness**
+   The final result must feel:
+
+   * premium
+   * minimal
+   * technically mature
+   * strong enough to impress a committee
+
+---
+
+## Visual direction
+
+Redesign the UI with a premium “AI memory system” identity.
+
+### Desired feeling
+
+* elegant dark mode and beautiful light mode
+* cinematic but minimal
+* soft depth
+* smooth transitions
+* clean spacing
+* modern cards
+* strong typography hierarchy
+* subtle motion
+* focused user attention
+* comfortable reading and searching
+* interface that feels alive, not static
+
+### Visual style references
+
+Use a design language inspired by:
+
+* modern AI products
+* premium SaaS dashboards
+* polished productivity apps
+* futuristic but minimal interfaces
+
+But keep it original and coherent.
+
+---
+
+## Frontend transformation goals
+
+### 1. Upgrade the full design system
+
+Create a much stronger visual system across the whole app:
+
+* typography scale
+* spacing system
+* border radius consistency
+* shadows
+* card surfaces
+* icon styling
+* button hierarchy
+* input styling
+* empty states
+* section titles
+* visual grouping
+
+Make the UI feel intentionally designed, not assembled.
+
+### 2. Build a strong app identity
+
+Memory Hub should have a recognizable visual identity.
+
+Improve:
+
+* logo presentation
+* page headers
+* visual rhythm
+* color logic
+* component consistency
+* memory-related thematic cues
+
+The product should feel like:
+“an intelligent personal memory space”.
+
+### 3. Make the app feel interactive and alive
+
+Add tasteful frontend interactions:
+
+* smooth hover states
+* press states
+* animated transitions
+* subtle page entrance animations
+* motion between states
+* loading skeletons
+* empty states with personality
+* animated tabs and cards
+* microinteractions for actions like save/search/upload
+
+Use animation carefully and elegantly.
+The UI should feel premium, not distracting.
+
+### 4. Greatly improve layout quality
+
+Improve page composition and structure:
+
+* stronger visual hierarchy
+* better padding and spacing
+* more balanced sections
+* cleaner grid systems
+* consistent alignment
+* better use of white space
+* stronger contrast between primary and secondary content
+
+Every page should look deliberate and refined.
+
+### 5. Make core screens impressive
+
+Redesign the most important screens so they look defense-ready and frontend-strong:
+
+#### Important pages:
+
+* Login
+* Dashboard
+* Library
+* Search
+* AI Chat
+* Timeline
+* Memory Details
+* Capture / New Memory
+* Settings
+
+Each one should feel unique but part of one consistent system.
+
+### 6. Make Dashboard much stronger
+
+The dashboard should feel like the user is opening their memory universe.
+
+Improve:
+
+* summary cards
+* recent items
+* quick capture area
+* visual insights
+* stats blocks
+* information hierarchy
+* section transitions
+* dashboard composition
+
+It should be one of the most impressive screens.
+
+### 7. Make Search feel premium and intelligent
+
+Search must feel like the heart of the product.
+
+Improve:
+
+* search bar design
+* result cards
+* ranking visualization
+* filters
+* highlights
+* tabs or result segmentation
+* semantic-like experience
+* loading states
+* no-results state
+
+Make the user feel:
+“this system understands meaning and memory context”.
+
+### 8. Make AI Chat look exceptional
+
+The AI Chat must look much more premium and convincing.
+
+Improve:
+
+* chat layout
+* message bubbles/cards
+* assistant identity
+* prompt suggestions
+* answer formatting
+* memory references
+* loading/typing states
+* response sections
+* better spacing and polish
+
+Even if AI is mock/MVP, it should visually feel powerful and convincing.
+
+### 9. Make file and capture flows look professional
+
+Improve:
+
+* upload area
+* drag-and-drop zone
+* file cards
+* metadata display
+* feedback states
+* success/error messages
+* memory creation flow
+* tags UI
+* forms
+
+These flows should feel smooth and intentional.
+
+### 10. Light mode and dark mode must both be premium
+
+Implement and refine both themes professionally.
+
+Requirements:
+
+* both modes fully styled
+* no half-finished theme support
+* colors must feel elegant and modern
+* save theme preference in localStorage
+* theme switch should feel polished
+
+Dark mode should feel immersive and premium.
+Light mode should feel clean, smart, and professional.
+
+---
+
+## Technical frontend expectations
+
+Use the existing tech stack and improve the UI architecture carefully.
+
+Prioritize:
+
+* reusable components
+* strong layout consistency
+* better page shells
+* better cards
+* better state visuals
+* maintainable styling
+* frontend cleanliness
+
+Do not create visual improvements that make the code chaotic.
+
+---
+
+## UX expectations
+
+The user should always understand:
+
+* where they are
+* what to do next
+* what is interactive
+* what was saved
+* what is loading
+* what failed
+* what is important
+
+Improve UX through:
+
+* clear action hierarchy
+* better feedback
+* better readability
+* better onboarding feel
+* fewer dead-looking areas
+
+---
+
+## Project-defense priority
+
+This app will be shown in a graduation defense.
+So optimize the frontend for:
+
+* strong first impression
+* impressive screenshots
+* clear visual identity
+* polished user flows
+* memorable interface
+* visible frontend effort
+
+When the committee sees it, it should immediately feel that real frontend work was done.
+
+---
+
+## Delivery requirements
+
+Please redesign and improve the frontend carefully and incrementally.
+
+After changes, provide:
+
+1. summary of the visual improvements
+2. which files were changed
+3. which components were improved
+4. confirmation that the app still runs
+5. what parts are especially strong for presentation/demo
+
+---
+
+## Final instruction
+
+Do not give me a generic UI.
+Do not give me a random template look.
+Do not give me a weak student-project interface.
+
+Give me a **premium, elegant, impressive, interactive frontend** that makes Memory Hub feel like a real intelligent product and clearly showcases strong frontend development skill.
