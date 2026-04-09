@@ -140,6 +140,25 @@ export async function registerRoutes(
     }
   });
 
+  // ─── File Serving (download + inline view) ─────────────────────────────────
+  // Note: Express 5 requires regex for params containing dots
+  // Use express.static for the uploads directory first (handles all files)
+  app.use("/api/files", (req: any, res: any, next: any) => {
+    const urlPath = req.path; // e.g. "/1775717027826-131542.txt" or "/abc.pdf/view"
+    const isView = urlPath.endsWith("/view");
+    const rawName = isView ? urlPath.slice(1, -5) : urlPath.slice(1); // strip leading / and /view
+    const safeName = path.basename(rawName);
+    if (!safeName || safeName.includes("..")) return next();
+
+    const filePath = path.join(UPLOADS_DIR, safeName);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: "Файл не найден" });
+    }
+    const disposition = isView ? "inline" : "attachment";
+    res.setHeader("Content-Disposition", `${disposition}; filename*=UTF-8''${encodeURIComponent(safeName)}`);
+    res.sendFile(filePath);
+  });
+
   // ─── Link Metadata Fetch ────────────────────────────────────────────────────
   app.post(api.fetchLink.path, async (req, res) => {
     try {

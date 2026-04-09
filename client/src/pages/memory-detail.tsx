@@ -5,7 +5,8 @@ import { ru } from "date-fns/locale";
 import {
   ArrowLeft, Calendar, FileText, Link as LinkIcon, Image as ImageIcon,
   Hash, User, Network, Trash2, Edit, ExternalLink, BrainCircuit,
-  Save, X, Tag, Clock, AtSign, Sparkles, Globe, FileCheck, File as FileIcon
+  Save, X, Tag, Clock, Sparkles, Globe, FileCheck,
+  File as FileIcon, FileImage, FileArchive, Download, Eye
 } from "lucide-react";
 import { useMemory, useDeleteMemory, useUpdateMemory, useMemories } from "@/hooks/use-memories";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,42 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { MemoryCard } from "@/components/memory-card";
 import { motion } from "framer-motion";
+
+function getFileBasename(filePath: string): string {
+  if (!filePath) return "";
+  return filePath.split("/").pop() || filePath.split("\\").pop() || filePath;
+}
+
+function getFileDownloadUrl(filePath: string): string {
+  const name = getFileBasename(filePath);
+  return name ? `/api/files/${encodeURIComponent(name)}` : "";
+}
+
+function getFileViewUrl(filePath: string): string {
+  const name = getFileBasename(filePath);
+  return name ? `/api/files/${encodeURIComponent(name)}/view` : "";
+}
+
+function formatBytes(bytes: number): string {
+  if (!bytes || bytes <= 0) return "";
+  if (bytes < 1024) return `${bytes} Б`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} КБ`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} МБ`;
+}
+
+function getFileMeta(mimeType: string): { icon: typeof FileIcon; label: string; color: string; bg: string } {
+  if (mimeType?.startsWith("image/"))
+    return { icon: FileImage, label: "Изображение", color: "text-violet-600 dark:text-violet-400", bg: "bg-violet-500/10" };
+  if (mimeType?.includes("pdf"))
+    return { icon: FileIcon, label: "PDF", color: "text-red-600 dark:text-red-400", bg: "bg-red-500/10" };
+  if (mimeType?.includes("word") || mimeType?.includes("document"))
+    return { icon: FileText, label: "Word", color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10" };
+  if (mimeType?.includes("zip") || mimeType?.includes("rar"))
+    return { icon: FileArchive, label: "Архив", color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/10" };
+  if (mimeType?.startsWith("text/"))
+    return { icon: FileText, label: "Текст", color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/10" };
+  return { icon: FileIcon, label: "Файл", color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/10" };
+}
 
 const TYPE_STYLES: Record<string, { bg: string; text: string; label: string }> = {
   text: { bg: "bg-blue-500/10", text: "text-blue-600 dark:text-blue-400", label: "Заметка" },
@@ -269,66 +306,154 @@ export default function MemoryDetail() {
                   </div>
                 )}
               </div>
-            ) : memory.type === "file" ? (
-              <div className="space-y-4">
-                {/* File info card */}
-                <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-5">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="bg-amber-500/10 p-2.5 rounded-xl shrink-0">
-                      <FileIcon className="w-5 h-5 text-amber-500" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-sm">{memory.title}</p>
-                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                        {memory.fileMimeType && (
-                          <Badge variant="outline" className="text-[10px] border-amber-500/20 text-amber-600 dark:text-amber-400 bg-amber-500/5">
-                            {memory.fileMimeType.split("/").pop()?.toUpperCase()}
+            ) : memory.type === "file" ? (() => {
+              const fileMeta = getFileMeta(memory.fileMimeType || "");
+              const FileTypeIcon = fileMeta.icon;
+              const downloadUrl = getFileDownloadUrl(memory.filePath || "");
+              const viewUrl = getFileViewUrl(memory.filePath || "");
+              const isImage = memory.fileMimeType?.startsWith("image/");
+              const isPdf = memory.fileMimeType?.includes("pdf");
+              const wordCount = memory.extractedContent
+                ? memory.extractedContent.split(/\s+/).filter(Boolean).length
+                : 0;
+
+              return (
+                <div className="space-y-4">
+                  {/* Document identity card */}
+                  <div className={`border rounded-2xl p-5 ${fileMeta.bg} border-current/10`} style={{ borderColor: "hsl(var(--border))" }}>
+                    <div className="flex items-start gap-4">
+                      <div className={`p-3.5 rounded-2xl shrink-0 ${fileMeta.bg} border border-white/10`}>
+                        <FileTypeIcon className={`w-7 h-7 ${fileMeta.color}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-base text-foreground leading-snug mb-1.5 break-all" data-testid="text-file-title">
+                          {memory.title}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant="outline" className={`text-[10px] font-medium border-0 ${fileMeta.bg} ${fileMeta.color} px-2 py-0.5`}>
+                            {fileMeta.label}
                           </Badge>
-                        )}
-                        {memory.fileSize && memory.fileSize > 0 && (
-                          <span className="text-[11px] text-muted-foreground">
-                            {memory.fileSize < 1024 * 1024
-                              ? `${(memory.fileSize / 1024).toFixed(1)} КБ`
-                              : `${(memory.fileSize / (1024 * 1024)).toFixed(1)} МБ`}
+                          {memory.fileSize ? (
+                            <span className="text-[11px] text-muted-foreground">{formatBytes(memory.fileSize)}</span>
+                          ) : null}
+                          {wordCount > 0 && (
+                            <span className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                              <FileCheck className="w-3 h-3" />
+                              {wordCount} слов
+                            </span>
+                          )}
+                          <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {format(new Date(memory.createdAt), "d MMM yyyy", { locale: ru })}
                           </span>
-                        )}
-                        {memory.extractedContent && (
-                          <span className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                            <FileCheck className="w-3 h-3" />
-                            {memory.extractedContent.split(/\s+/).filter(Boolean).length} слов извлечено
-                          </span>
+                        </div>
+                        {memory.content && memory.content !== `Файл: ${memory.title}` && (
+                          <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{memory.content}</p>
                         )}
                       </div>
                     </div>
+
+                    {/* Action buttons */}
+                    {downloadUrl && (
+                      <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-border/30">
+                        <a
+                          href={downloadUrl}
+                          download
+                          className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-xl bg-foreground/5 hover:bg-foreground/10 border border-border/40 hover:border-border/70 transition-all"
+                          data-testid="link-download-file"
+                        >
+                          <Download className="w-4 h-4" />
+                          Скачать файл
+                        </a>
+                        {(isImage || isPdf) && (
+                          <a
+                            href={viewUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-xl bg-primary/8 hover:bg-primary/15 border border-primary/20 text-primary transition-all"
+                            data-testid="link-view-file"
+                          >
+                            <Eye className="w-4 h-4" />
+                            Открыть
+                          </a>
+                        )}
+                        {!isImage && !isPdf && viewUrl && (
+                          <a
+                            href={viewUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-xl bg-foreground/5 hover:bg-foreground/10 border border-border/40 transition-all"
+                            data-testid="link-open-file"
+                          >
+                            <Eye className="w-4 h-4" />
+                            Открыть
+                          </a>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  {memory.content && (
-                    <p className="text-sm text-muted-foreground">{memory.content}</p>
+
+                  {/* Image preview */}
+                  {isImage && viewUrl && (
+                    <div className="bg-muted/30 border border-border/30 rounded-2xl p-4 flex flex-col items-center">
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-3 self-start">Предпросмотр</p>
+                      <img
+                        src={viewUrl}
+                        alt={memory.title}
+                        className="max-h-80 max-w-full rounded-xl object-contain shadow-sm"
+                        data-testid="img-file-preview"
+                      />
+                    </div>
+                  )}
+
+                  {/* PDF preview */}
+                  {isPdf && viewUrl && (
+                    <div className="bg-muted/30 border border-border/30 rounded-2xl p-4">
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">Предпросмотр PDF</p>
+                      <iframe
+                        src={viewUrl}
+                        className="w-full h-96 rounded-xl border border-border/20"
+                        title={memory.title}
+                        data-testid="iframe-pdf-preview"
+                      />
+                    </div>
+                  )}
+
+                  {/* Extracted text */}
+                  {memory.extractedContent ? (
+                    <div className="bg-card border border-border/30 rounded-xl p-5">
+                      <div className="flex items-center gap-2 mb-3">
+                        <FileCheck className="w-3.5 h-3.5 text-emerald-500" />
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Извлечённый текст</p>
+                        <span className="ml-auto text-[10px] text-muted-foreground/60">{wordCount} слов</span>
+                      </div>
+                      <div className="prose dark:prose-invert max-w-none text-foreground text-sm leading-relaxed">
+                        {memory.extractedContent.slice(0, 3000).split("\n").map((para, i) =>
+                          para.trim() ? <p key={i}>{para}</p> : <br key={i} />
+                        )}
+                        {memory.extractedContent.length > 3000 && (
+                          <p className="text-muted-foreground italic mt-3 text-xs">
+                            ... ещё {(memory.extractedContent.length - 3000).toLocaleString()} символов — скачайте файл для полного содержания
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="border border-border/30 rounded-xl p-5 flex items-start gap-3 bg-muted/20">
+                      <FileTypeIcon className={`w-5 h-5 shrink-0 mt-0.5 ${fileMeta.color}`} />
+                      <div>
+                        <p className="text-sm font-medium mb-0.5">Текст не извлечён</p>
+                        <p className="text-xs text-muted-foreground">
+                          {isImage
+                            ? "Это изображение — текстовое содержание недоступно. Вы можете открыть или скачать файл выше."
+                            : "Формат файла не поддерживает автоматическое извлечение текста. Вы можете скачать файл выше."}
+                        </p>
+                      </div>
+                    </div>
                   )}
                 </div>
-                {/* Extracted text */}
-                {memory.extractedContent ? (
-                  <div className="bg-card border border-border/30 rounded-xl p-5">
-                    <div className="flex items-center gap-2 mb-3">
-                      <FileCheck className="w-3.5 h-3.5 text-emerald-500" />
-                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Извлечённый текст</p>
-                    </div>
-                    <div className="prose dark:prose-invert max-w-none text-foreground text-sm leading-relaxed">
-                      {memory.extractedContent.slice(0, 2000).split("\n").map((para, i) =>
-                        para ? <p key={i}>{para}</p> : <br key={i} />
-                      )}
-                      {memory.extractedContent.length > 2000 && (
-                        <p className="text-muted-foreground italic mt-2">...и ещё {memory.extractedContent.length - 2000} символов</p>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-amber-500/5 border border-amber-500/15 rounded-xl p-4 flex items-center gap-2">
-                    <FileIcon className="w-4 h-4 text-amber-500 shrink-0" />
-                    <p className="text-xs text-amber-700 dark:text-amber-400">Текст не извлечён (изображение или неподдерживаемый формат)</p>
-                  </div>
-                )}
-              </div>
-            ) : (
+              );
+            })() : (
               <div className="prose dark:prose-invert max-w-none text-foreground leading-relaxed text-sm">
                 {memory.content.split("\n").map((paragraph, i) =>
                   paragraph ? <p key={i}>{paragraph}</p> : <br key={i} />

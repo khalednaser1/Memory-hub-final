@@ -21,6 +21,12 @@ function stripTags(html: string): string {
     .replace(/<script[\s\S]*?<\/script>/gi, "")
     .replace(/<style[\s\S]*?<\/style>/gi, "")
     .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#\d+;/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -58,20 +64,99 @@ function getDescriptionFromHtml(html: string): string {
   );
 }
 
+// Patterns that indicate UI boilerplate noise
+const NOISE_PATTERNS = [
+  /^(home|about|contact|sign\s?in|sign\s?up|log\s?in|register|menu|navigation|search|close|open|toggle|skip to|back to top|read more|learn more|click here|get started|subscribe|newsletter|cookie|accept|decline|ok|cancel|yes|no|×|‹|›|«|»|\.{3})$/i,
+  /^(главная|о нас|контакты|войти|выйти|зарегистрироваться|меню|поиск|закрыть|назад|вперёд|читать|ещё|далее|отмена|принять|отклонить)$/i,
+  /cookie/i,
+  /privacy policy/i,
+  /terms of service/i,
+  /all rights reserved/i,
+  /copyright ©/i,
+  /follow us/i,
+  /share this/i,
+];
+
+function isNoisyLine(line: string): boolean {
+  const trimmed = line.trim();
+  if (trimmed.length < 4) return true;
+  // Pure navigation / menu items: very short with no sentence structure
+  if (trimmed.length < 25 && !/[.!?,]/.test(trimmed) && /^[A-ZА-Я]/.test(trimmed) && !/\s{2,}/.test(trimmed)) {
+    // Single word or very short label — likely a nav item
+    if (!/\s/.test(trimmed)) return true;
+  }
+  // Known boilerplate patterns
+  if (NOISE_PATTERNS.some(p => p.test(trimmed))) return true;
+  // Breadcrumb pattern (e.g. "Home > Blog > Article")
+  if (/(\w+\s*[>›»/]\s*){2,}\w+/.test(trimmed)) return true;
+  return false;
+}
+
+function extractParagraphs(html: string): string[] {
+  const paragraphs: string[] = [];
+
+  // Extract text from <p> tags first (highest signal)
+  const pTagMatches = html.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi);
+  for (const m of pTagMatches) {
+    const text = stripTags(m[1]).trim();
+    if (text.length > 40 && !isNoisyLine(text)) {
+      paragraphs.push(text);
+    }
+  }
+
+  // Also extract <li> items that look like sentences
+  const liMatches = html.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi);
+  for (const m of liMatches) {
+    const text = stripTags(m[1]).trim();
+    if (text.length > 30 && text.includes(" ") && !isNoisyLine(text)) {
+      paragraphs.push(text);
+    }
+  }
+
+  // Extract <h2>/<h3> headings as context anchors
+  const headingMatches = html.matchAll(/<h[23][^>]*>([\s\S]*?)<\/h[23]>/gi);
+  for (const m of headingMatches) {
+    const text = stripTags(m[1]).trim();
+    if (text.length > 5 && text.length < 120 && !isNoisyLine(text)) {
+      paragraphs.push(text);
+    }
+  }
+
+  return paragraphs;
+}
+
 function getBodyText(html: string, maxChars = 3000): string {
-  // Remove boilerplate sections
+  // Remove boilerplate structural elements
   let body = html
     .replace(/<nav[\s\S]*?<\/nav>/gi, "")
     .replace(/<header[\s\S]*?<\/header>/gi, "")
     .replace(/<footer[\s\S]*?<\/footer>/gi, "")
-    .replace(/<aside[\s\S]*?<\/aside>/gi, "");
+    .replace(/<aside[\s\S]*?<\/aside>/gi, "")
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, "")
+    .replace(/<!--[\s\S]*?-->/g, "");
 
-  // Try to extract main content area first
-  const mainMatch = body.match(/<(?:main|article)[^>]*>([\s\S]*?)<\/(?:main|article)>/i);
-  const contentHtml = mainMatch ? mainMatch[1] : body;
+  // Try structured paragraph extraction first
+  const mainMatch = body.match(/<(?:main|article|section)[^>]*>([\s\S]*?)<\/(?:main|article|section)>/i);
+  const contentArea = mainMatch ? mainMatch[1] : body;
 
-  const text = stripTags(contentHtml);
-  return text.slice(0, maxChars);
+  const paragraphs = extractParagraphs(contentArea);
+
+  if (paragraphs.length >= 2) {
+    // Use paragraph-based extraction — highest quality
+    const result = paragraphs.join("\n").slice(0, maxChars);
+    return result;
+  }
+
+  // Fallback: strip all tags from main content area
+  const rawText = stripTags(contentArea);
+
+  // Filter line-by-line
+  const lines = rawText
+    .split(/\n+/)
+    .map(l => l.trim())
+    .filter(l => l.length > 20 && !isNoisyLine(l));
+
+  return lines.join("\n").slice(0, maxChars);
 }
 
 export async function fetchLinkMetadata(url: string): Promise<LinkMetadata> {

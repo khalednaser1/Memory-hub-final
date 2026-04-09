@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { formatDistanceToNow } from "date-fns";
 import { ru } from "date-fns/locale";
-import { FileText, Link as LinkIcon, File, Hash, Calendar, User, Globe, FileCheck } from "lucide-react";
+import { FileText, Link as LinkIcon, File, Hash, Calendar, User, Globe, FileCheck, FileImage, FileArchive, Download } from "lucide-react";
 import { type MemoryResponse } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
 
@@ -11,19 +11,44 @@ const TYPE_STYLES = {
   file: { bg: "bg-amber-500/10 dark:bg-amber-500/15", text: "text-amber-600 dark:text-amber-400", label: "Файл" },
 };
 
-export function MemoryCard({ memory, highlightReason }: { memory: MemoryResponse & { relevanceScore?: number, matchReason?: string }, highlightReason?: boolean }) {
-  const Icon = memory.type === "link" ? LinkIcon : memory.type === "file" ? File : FileText;
-  const style = TYPE_STYLES[memory.type as keyof typeof TYPE_STYLES] || TYPE_STYLES.text;
+function getFileCardMeta(mimeType: string): { icon: typeof File; label: string; bg: string; text: string } {
+  if (mimeType?.startsWith("image/"))
+    return { icon: FileImage, label: "Изображение", bg: "bg-violet-500/10 dark:bg-violet-500/15", text: "text-violet-600 dark:text-violet-400" };
+  if (mimeType?.includes("pdf"))
+    return { icon: File, label: "PDF", bg: "bg-red-500/10 dark:bg-red-500/15", text: "text-red-600 dark:text-red-400" };
+  if (mimeType?.includes("word") || mimeType?.includes("document"))
+    return { icon: FileText, label: "Word", bg: "bg-blue-500/10 dark:bg-blue-500/15", text: "text-blue-600 dark:text-blue-400" };
+  if (mimeType?.includes("zip") || mimeType?.includes("rar"))
+    return { icon: FileArchive, label: "Архив", bg: "bg-amber-500/10 dark:bg-amber-500/15", text: "text-amber-600 dark:text-amber-400" };
+  if (mimeType?.startsWith("text/"))
+    return { icon: FileText, label: "Текст", bg: "bg-amber-500/10 dark:bg-amber-500/15", text: "text-amber-600 dark:text-amber-400" };
+  return { icon: File, label: "Файл", bg: "bg-amber-500/10 dark:bg-amber-500/15", text: "text-amber-600 dark:text-amber-400" };
+}
 
-  // Build the best description snippet
+function formatBytes(bytes: number): string {
+  if (!bytes || bytes <= 0) return "";
+  if (bytes < 1024) return `${bytes} Б`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} КБ`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} МБ`;
+}
+
+export function MemoryCard({ memory, highlightReason }: { memory: MemoryResponse & { relevanceScore?: number, matchReason?: string }, highlightReason?: boolean }) {
+  const isFile = memory.type === "file";
+  const isLink = memory.type === "link";
+
+  // For file cards, use MIME-specific icon/color
+  const fileMeta = isFile ? getFileCardMeta(memory.fileMimeType || "") : null;
+  const Icon = isLink ? LinkIcon : isFile ? (fileMeta!.icon) : FileText;
+  const style = isFile
+    ? fileMeta!
+    : TYPE_STYLES[memory.type as keyof typeof TYPE_STYLES] || TYPE_STYLES.text;
+
+  // Best description snippet
   const description = (() => {
-    if (memory.type === "link") {
-      return memory.linkDescription || memory.summary || memory.content;
-    }
-    if (memory.type === "file") {
-      return memory.extractedContent
-        ? memory.extractedContent.slice(0, 180)
-        : memory.summary || memory.content;
+    if (isLink) return memory.linkDescription || memory.summary || memory.content;
+    if (isFile) {
+      if (memory.extractedContent) return memory.extractedContent.replace(/\n+/g, " ").slice(0, 160);
+      return memory.content && memory.content !== `Файл: ${memory.title}` ? memory.content : "";
     }
     return memory.summary || memory.content;
   })();
@@ -38,32 +63,47 @@ export function MemoryCard({ memory, highlightReason }: { memory: MemoryResponse
           <div className={`${style.bg} ${style.text} p-2.5 rounded-xl`}>
             <Icon className="w-4 h-4" />
           </div>
-          <div className="flex items-center gap-1.5">
-            {/* Show domain for links */}
-            {memory.type === "link" && memory.linkDomain && (
+          <div className="flex items-center gap-1.5 flex-wrap justify-end">
+            {/* Link: show domain */}
+            {isLink && memory.linkDomain && (
               <span className="text-[10px] text-muted-foreground/70 bg-muted/40 px-2 py-0.5 rounded-md flex items-center gap-1">
                 <Globe className="w-2.5 h-2.5" />{memory.linkDomain}
               </span>
             )}
-            {/* Show extracted badge for files */}
-            {memory.type === "file" && memory.extractedContent && (
-              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/8 px-2 py-0.5 rounded-md flex items-center gap-1 border border-emerald-500/15">
-                <FileCheck className="w-2.5 h-2.5" />текст
+            {/* File: show type label + size */}
+            {isFile && fileMeta && (
+              <span className={`text-[10px] ${fileMeta.text} ${fileMeta.bg} px-2 py-0.5 rounded-md font-medium`}>
+                {fileMeta.label}
               </span>
             )}
-            <div className="text-[11px] text-muted-foreground font-medium bg-muted/60 px-2.5 py-1 rounded-lg">
+            {isFile && memory.fileSize ? (
+              <span className="text-[10px] text-muted-foreground/70 bg-muted/40 px-2 py-0.5 rounded-md">
+                {formatBytes(memory.fileSize)}
+              </span>
+            ) : null}
+            {isFile && memory.extractedContent && (
+              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/8 px-2 py-0.5 rounded-md flex items-center gap-1 border border-emerald-500/15">
+                <FileCheck className="w-2.5 h-2.5" />
+                {memory.extractedContent.split(/\s+/).filter(Boolean).length} сл.
+              </span>
+            )}
+            <div className="text-[11px] text-muted-foreground font-medium bg-muted/60 px-2.5 py-1 rounded-lg whitespace-nowrap">
               {formatDistanceToNow(new Date(memory.createdAt), { addSuffix: true, locale: ru })}
             </div>
           </div>
         </div>
 
         <h3 className="font-semibold text-[15px] text-foreground mb-1.5 line-clamp-2 leading-snug group-hover:text-primary transition-colors relative z-10" data-testid={`text-title-${memory.id}`}>
-          {memory.type === "link" && memory.linkTitle ? memory.linkTitle : memory.title}
+          {isLink && memory.linkTitle ? memory.linkTitle : memory.title}
         </h3>
 
-        <p className="text-sm text-muted-foreground line-clamp-2 mb-4 flex-1 relative z-10 leading-relaxed">
-          {description}
-        </p>
+        {description ? (
+          <p className="text-sm text-muted-foreground line-clamp-2 mb-4 flex-1 relative z-10 leading-relaxed">
+            {description}
+          </p>
+        ) : (
+          <div className="flex-1 mb-4" />
+        )}
 
         {highlightReason && memory.matchReason && (
           <div className="mb-3 bg-primary/5 p-2.5 rounded-lg border border-primary/15 text-xs text-primary relative z-10">
@@ -101,6 +141,13 @@ export function MemoryCard({ memory, highlightReason }: { memory: MemoryResponse
                 </Badge>
               ))}
             </>
+          )}
+
+          {/* For files with no tags: show download indicator */}
+          {isFile && !memory.tags.length && !memory.entities?.people?.length && (
+            <span className="text-[10px] text-muted-foreground flex items-center gap-1 opacity-50">
+              <Download className="w-2.5 h-2.5" /> Скачать →
+            </span>
           )}
         </div>
       </div>

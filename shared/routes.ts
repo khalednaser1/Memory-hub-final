@@ -83,6 +83,14 @@ export const api = {
     method: 'POST' as const,
     path: '/api/upload' as const,
   },
+  fileDownload: {
+    method: 'GET' as const,
+    path: '/api/files/:filename' as const,
+  },
+  fileView: {
+    method: 'GET' as const,
+    path: '/api/files/:filename/view' as const,
+  },
   fetchLink: {
     method: 'POST' as const,
     path: '/api/fetch-link' as const,
