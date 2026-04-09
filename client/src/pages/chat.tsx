@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
   Send, Trash2, Brain, Sparkles, FileText, Link as LinkIcon,
-  ArrowUpRight, Bot, User, ChevronRight
+  ArrowUpRight, Bot, User, ChevronRight, MessageCircle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { semanticSearch } from "@/lib/search";
@@ -131,10 +131,9 @@ function generateAIResponse(query: string, memories: Memory[]): { content: strin
 function renderContent(text: string) {
   const lines = text.split("\n");
   return lines.map((line, i) => {
-    // Bold **text**
     const parts = line.split(/(\*\*[^*]+\*\*)/g).map((part, j) => {
       if (part.startsWith("**") && part.endsWith("**")) {
-        return <strong key={j}>{part.slice(2, -2)}</strong>;
+        return <strong key={j} className="font-semibold">{part.slice(2, -2)}</strong>;
       }
       return <span key={j}>{part}</span>;
     });
@@ -148,9 +147,9 @@ function TypingIndicator() {
       {[0, 1, 2].map(i => (
         <motion.div
           key={i}
-          className="w-2 h-2 rounded-full bg-primary/60"
-          animate={{ y: [0, -6, 0] }}
-          transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
+          className="w-1.5 h-1.5 rounded-full bg-primary/50"
+          animate={{ y: [0, -5, 0], opacity: [0.4, 1, 0.4] }}
+          transition={{ duration: 0.7, repeat: Infinity, delay: i * 0.15 }}
         />
       ))}
     </div>
@@ -201,7 +200,6 @@ export default function Chat() {
     setMessages(prev => [...prev, userMsg, typingMsg]);
     setIsLoading(true);
 
-    // Simulate AI latency (800–1600 ms)
     const delay = 800 + Math.random() * 800;
     await new Promise(r => setTimeout(r, delay));
 
@@ -237,76 +235,79 @@ export default function Chat() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto flex flex-col h-[calc(100vh-0px)] md:h-screen p-4 md:p-6 gap-4">
-      {/* Header */}
-      <div className="flex items-center justify-between shrink-0">
+    <div className="max-w-3xl mx-auto flex flex-col h-[calc(100vh-0px)] md:h-screen p-4 md:p-6 gap-3">
+      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
-          <div className="bg-primary/10 text-primary p-2.5 rounded-2xl">
-            <Brain className="w-6 h-6" />
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary to-purple-600 rounded-xl blur-md opacity-30" />
+            <div className="relative bg-gradient-to-br from-primary to-purple-600 text-white p-2.5 rounded-xl shadow-lg shadow-primary/20">
+              <Brain className="w-5 h-5" />
+            </div>
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Memory Assistant</h1>
-            <p className="text-xs text-muted-foreground">
+            <h1 className="text-lg font-bold tracking-tight" data-testid="text-chat-title">Memory Assistant</h1>
+            <p className="text-[11px] text-muted-foreground">
               {memories.length > 0
-                ? `Доступно ${pluralRu(memories.length, "воспоминание", "воспоминания", "воспоминаний")}`
+                ? `${pluralRu(memories.length, "воспоминание", "воспоминания", "воспоминаний")} в базе`
                 : "Загрузка базы..."}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="text-xs gap-1.5 hidden sm:flex">
+          <Badge variant="secondary" className="text-[10px] gap-1 hidden sm:flex px-2 py-1 rounded-lg font-medium">
             <Sparkles className="w-3 h-3" />
-            MVP · Локальный AI
+            Локальный AI
           </Badge>
           {messages.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={handleClear} className="text-muted-foreground">
-              <Trash2 className="w-4 h-4 mr-1.5" />
+            <Button variant="ghost" size="sm" onClick={handleClear} className="text-muted-foreground h-8 text-xs" data-testid="button-clear-chat">
+              <Trash2 className="w-3.5 h-3.5 mr-1" />
               Очистить
             </Button>
           )}
         </div>
-      </div>
+      </motion.div>
 
-      {/* Messages area */}
       <div className="flex-1 min-h-0 overflow-y-auto pr-1">
         {messages.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={{ duration: 0.5 }}
             className="flex flex-col items-center justify-center h-full text-center py-10"
           >
-            <div className="bg-primary/10 text-primary p-5 rounded-3xl mb-6">
-              <Brain className="w-12 h-12" />
+            <div className="relative mb-6">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary to-purple-600 rounded-3xl blur-xl opacity-20" />
+              <div className="relative bg-gradient-to-br from-primary/10 to-purple-500/10 text-primary p-6 rounded-3xl border border-primary/10">
+                <MessageCircle className="w-10 h-10" />
+              </div>
             </div>
-            <h2 className="text-2xl font-bold mb-2">Чем могу помочь?</h2>
-            <p className="text-muted-foreground text-sm max-w-sm">
+            <h2 className="text-xl font-bold mb-2">Чем могу помочь?</h2>
+            <p className="text-muted-foreground text-sm max-w-sm leading-relaxed">
               Я анализирую ваши воспоминания и отвечаю на вопросы с источниками
             </p>
           </motion.div>
         ) : (
-          <div className="space-y-4 py-2">
+          <div className="space-y-3 py-2">
             <AnimatePresence initial={false}>
               {messages.map(msg => (
                 <motion.div
                   key={msg.id}
-                  initial={{ opacity: 0, y: 8 }}
+                  initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.2 }}
-                  className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                  className={`flex gap-2.5 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                 >
                   {msg.role === "assistant" && (
-                    <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-1">
-                      <Bot className="w-4 h-4" />
+                    <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary/15 to-purple-500/15 text-primary flex items-center justify-center shrink-0 mt-0.5">
+                      <Bot className="w-3.5 h-3.5" />
                     </div>
                   )}
 
-                  <div className={`max-w-[80%] space-y-3 ${msg.role === "user" ? "items-end" : "items-start"} flex flex-col`}>
-                    {/* Bubble */}
+                  <div className={`max-w-[80%] space-y-2.5 ${msg.role === "user" ? "items-end" : "items-start"} flex flex-col`}>
                     <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                       msg.role === "user"
-                        ? "bg-primary text-primary-foreground rounded-tr-sm"
-                        : "bg-card border border-border/60 text-foreground rounded-tl-sm"
+                        ? "bg-gradient-to-br from-primary to-primary/90 text-primary-foreground rounded-tr-md shadow-md shadow-primary/15"
+                        : "bg-card border border-border/40 text-foreground rounded-tl-md"
                     }`}>
                       {msg.isTyping ? (
                         <TypingIndicator />
@@ -317,24 +318,23 @@ export default function Chat() {
                       )}
                     </div>
 
-                    {/* Source cards */}
                     {msg.sources && msg.sources.length > 0 && !msg.isTyping && (
-                      <div className="w-full space-y-1.5">
-                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide ml-1">
+                      <div className="w-full space-y-1">
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider ml-1">
                           Источники
                         </p>
                         {msg.sources.map(src => {
                           const Icon = src.type === "link" ? LinkIcon : FileText;
                           return (
                             <Link key={src.id} href={`/memory/${src.id}`}>
-                              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/60 hover:bg-muted border border-border/50 hover:border-primary/30 transition-all group cursor-pointer">
-                                <div className="p-1.5 rounded-lg bg-background border border-border/50 text-muted-foreground group-hover:text-primary transition-colors shrink-0">
-                                  <Icon className="w-3.5 h-3.5" />
+                              <div className="flex items-center gap-2 p-2 rounded-xl bg-muted/40 hover:bg-muted/60 border border-border/30 hover:border-primary/20 transition-all group cursor-pointer" data-testid={`link-source-${src.id}`}>
+                                <div className="p-1.5 rounded-lg bg-card border border-border/30 text-muted-foreground group-hover:text-primary transition-colors shrink-0">
+                                  <Icon className="w-3 h-3" />
                                 </div>
                                 <span className="text-xs font-medium flex-1 truncate group-hover:text-primary transition-colors">
                                   {src.title}
                                 </span>
-                                <ArrowUpRight className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-primary transition-colors shrink-0" />
+                                <ArrowUpRight className="w-3 h-3 text-muted-foreground/40 group-hover:text-primary transition-colors shrink-0" />
                               </div>
                             </Link>
                           );
@@ -344,8 +344,8 @@ export default function Chat() {
                   </div>
 
                   {msg.role === "user" && (
-                    <div className="w-8 h-8 rounded-xl bg-secondary text-foreground flex items-center justify-center shrink-0 mt-1">
-                      <User className="w-4 h-4" />
+                    <div className="w-7 h-7 rounded-lg bg-secondary text-foreground flex items-center justify-center shrink-0 mt-0.5">
+                      <User className="w-3.5 h-3.5" />
                     </div>
                   )}
                 </motion.div>
@@ -356,41 +356,42 @@ export default function Chat() {
         )}
       </div>
 
-      {/* Suggested prompts row */}
       <div className="shrink-0">
-        <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
+        <div className="flex gap-1.5 overflow-x-auto pb-2 hide-scrollbar">
           {SUGGESTED_PROMPTS.map(p => (
             <button
               key={p.text}
               onClick={() => handleSend(p.text)}
               disabled={isLoading}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border/60 bg-card hover:border-primary/40 hover:bg-primary/5 text-xs text-muted-foreground hover:text-foreground transition-all shrink-0 disabled:opacity-40"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/30 bg-card hover:border-primary/30 hover:bg-primary/5 text-[11px] text-muted-foreground hover:text-foreground transition-all shrink-0 disabled:opacity-40 font-medium"
+              data-testid={`button-prompt-${p.text.slice(0, 10)}`}
             >
               <span>{p.icon}</span>
               <span>{p.text}</span>
-              <ChevronRight className="w-3 h-3 opacity-40" />
+              <ChevronRight className="w-3 h-3 opacity-30" />
             </button>
           ))}
         </div>
 
-        {/* Input */}
         <div className="flex gap-2 items-end mt-1">
           <Textarea
             ref={textareaRef}
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Задайте вопрос о ваших воспоминаниях... (Enter — отправить, Shift+Enter — перенос)"
+            placeholder="Задайте вопрос о ваших воспоминаниях..."
             disabled={isLoading}
             rows={1}
-            className="flex-1 resize-none bg-card border-border/60 rounded-2xl text-sm min-h-[44px] max-h-[120px] py-3 px-4 focus-visible:ring-primary/30 overflow-hidden"
+            className="flex-1 resize-none bg-card border-border/30 rounded-xl text-sm min-h-[42px] max-h-[120px] py-2.5 px-4 focus-visible:ring-primary/30 overflow-hidden shadow-sm"
             style={{ fieldSizing: "content" } as React.CSSProperties}
+            data-testid="input-chat"
           />
           <Button
             onClick={() => handleSend()}
             disabled={isLoading || !input.trim()}
             size="icon"
-            className="h-11 w-11 rounded-xl shrink-0 shadow-md shadow-primary/20"
+            className="h-[42px] w-[42px] rounded-xl shrink-0 shadow-lg shadow-primary/20"
+            data-testid="button-send"
           >
             <Send className="w-4 h-4" />
           </Button>
