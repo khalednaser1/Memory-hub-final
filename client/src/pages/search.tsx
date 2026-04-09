@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
-import { Search as SearchIcon, Brain, TextSearch, Loader2, FileText, Link as LinkIcon, Hash, Calendar, ExternalLink, ArrowRight, Sparkles, Command, Zap, BookOpen } from "lucide-react";
+import { Search as SearchIcon, Brain, TextSearch, Loader2, FileText, Link as LinkIcon, Hash, Calendar, ExternalLink, ArrowRight, Sparkles, Command, Zap, BookOpen, Globe, File as FileIcon, FileCheck } from "lucide-react";
 import { useSearchMemories } from "@/hooks/use-memories";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -154,16 +154,54 @@ function PreviewPanel({ memory }: { memory: SearchResult }) {
           </div>
         )}
 
-        <div className="bg-muted/30 border border-border/30 rounded-xl p-4">
-          <p className="text-[10px] font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Содержимое</p>
-          {memory.type === "link" ? (
-            <a href={memory.content} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1 text-sm break-all">
-              {memory.content} <ExternalLink className="w-3 h-3 shrink-0" />
-            </a>
-          ) : (
+        {memory.type === "link" ? (
+          <div className="space-y-3">
+            <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4">
+              <div className="flex items-start gap-2 mb-2">
+                <Globe className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                <div>
+                  {(memory as any).linkTitle && <p className="font-medium text-sm text-foreground mb-0.5">{(memory as any).linkTitle}</p>}
+                  {(memory as any).linkDomain && <p className="text-[11px] text-muted-foreground mb-1">{(memory as any).linkDomain}</p>}
+                  {(memory as any).linkDescription && <p className="text-xs text-muted-foreground leading-relaxed">{(memory as any).linkDescription}</p>}
+                </div>
+              </div>
+              <a href={(memory as any).linkUrl || memory.content} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 hover:underline">
+                Открыть <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+            {(memory as any).extractedContent && (
+              <div className="bg-muted/30 border border-border/20 rounded-xl p-3">
+                <p className="text-[10px] font-semibold text-muted-foreground mb-1.5 uppercase tracking-wider flex items-center gap-1">
+                  <FileCheck className="w-3 h-3 text-emerald-500" />Текст страницы
+                </p>
+                <p className="text-xs text-muted-foreground leading-relaxed line-clamp-4">{(memory as any).extractedContent}</p>
+              </div>
+            )}
+          </div>
+        ) : memory.type === "file" ? (
+          <div className="space-y-3">
+            <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4 flex items-start gap-2">
+              <FileIcon className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+              <div>
+                {(memory as any).fileMimeType && <p className="text-[11px] text-muted-foreground">{(memory as any).fileMimeType}</p>}
+                <p className="text-xs text-foreground/80 mt-1">{memory.content}</p>
+              </div>
+            </div>
+            {(memory as any).extractedContent && (
+              <div className="bg-muted/30 border border-border/20 rounded-xl p-3">
+                <p className="text-[10px] font-semibold text-muted-foreground mb-1.5 uppercase tracking-wider flex items-center gap-1">
+                  <FileCheck className="w-3 h-3 text-emerald-500" />Извлечённый текст
+                </p>
+                <p className="text-xs text-muted-foreground leading-relaxed line-clamp-6">{(memory as any).extractedContent}</p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="bg-muted/30 border border-border/30 rounded-xl p-4">
+            <p className="text-[10px] font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Содержимое</p>
             <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap line-clamp-10">{memory.content}</p>
-          )}
-        </div>
+          </div>
+        )}
 
         {memory.tags.length > 0 && (
           <div>

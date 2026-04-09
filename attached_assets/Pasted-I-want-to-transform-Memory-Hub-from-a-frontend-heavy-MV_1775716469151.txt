@@ -1,0 +1,276 @@
+I want to transform Memory Hub from a frontend-heavy MVP into a much more functional, working intelligent system.
+
+This is no longer just a UI refinement task.
+
+I want you to implement the core intelligence and data functionality properly, as much as possible inside this project, while keeping the app stable and preserving the current UI.
+
+Main goal:
+Make the app actually work like an intelligent personal memory system, not just a visual prototype.
+
+Critical requirements:
+
+1. Do not break the current app
+2. Keep the current frontend design and routing intact as much as possible
+3. Replace fake/mock behavior with real working behavior wherever possible
+4. Build the system incrementally and safely
+5. After each major step, verify the app still runs
+
+What is currently wrong:
+
+* file upload currently saves files as metadata/memory objects only
+* files are not really processed
+* links are not deeply processed
+* AI Chat gives generic or repeated answers and does not truly understand the stored data
+* semantic search is weak / almost non-functional
+* the system does not yet behave like a true intelligent memory base
+
+I want you to fix these areas properly.
+
+==================================================
+
+1. REAL FILE HANDLING AND CONTENT EXTRACTION
+   ==================================================
+
+I want users to be able to upload files and have the system actually process their content.
+
+Required behavior:
+
+* user uploads a file
+* the file is stored properly (not just as a fake note)
+* extract readable content from supported file types where possible
+* save:
+
+  * file metadata
+  * extracted text
+  * document type
+  * upload date
+  * related tags / entities if possible
+* show the file in the library as a real file-based memory item
+* make it searchable by content, not only by title
+
+Supported file types to prioritize:
+
+* .txt
+* .pdf
+* .docx
+* images if possible (at least metadata first, OCR optional only if safe and realistic)
+* basic text-rich formats
+
+Important:
+
+* If full binary storage or cloud storage is required, implement the best practical local/server solution possible in this project
+* If some file types are harder, still build the architecture correctly and support the easiest useful types first
+* Do not leave file upload as metadata-only if it can be improved
+
+==================================================
+2. REAL LINK HANDLING
+=====================
+
+When a user saves a link, I want the system to do more than just store the URL.
+
+Required behavior:
+
+* save the original URL
+* try to fetch or extract useful metadata:
+
+  * page title
+  * description
+  * domain
+  * main text if realistically possible
+* save this extracted content into the memory item
+* make the link searchable by its extracted content and not only by the raw URL
+* show the link item in a rich way in the UI
+
+If direct scraping is limited, implement the safest realistic fallback:
+
+* title + description + domain + optional fetched preview content
+
+==================================================
+3. AI CHAT MUST ACTUALLY USE THE STORED DATA
+============================================
+
+The AI Chat must stop behaving like a fake repeated-response assistant.
+
+Right now it behaves like a dummy mock.
+I want it to behave like a real memory assistant that uses the stored content.
+
+Required behavior:
+
+* the assistant must answer differently depending on the user’s real stored data
+* it must use memories, notes, links, and extracted file text as context
+* it must retrieve relevant memory items before answering
+* it must cite or reference the source memory items in the response
+* it must not return the same answer to unrelated prompts
+* it must support questions like:
+
+  * what documents did I upload about X?
+  * summarize what I saved about frontend
+  * what links did I save about AI?
+  * what tags are most common?
+  * what did I add this week?
+  * what are the relationships between these topics?
+
+Implementation expectation:
+
+* build a retrieval layer
+* retrieve relevant memory items
+* generate the answer based on retrieved content
+* if no external LLM API is available, implement the best realistic local/prototype retrieval-answering pipeline possible
+* if an API key / LLM integration is needed, structure the app cleanly for it and implement the integration path properly
+
+Important:
+I want the AI Chat to feel like a real model-based assistant over the memory base, not a hardcoded responder.
+
+==================================================
+4. REAL SEMANTIC / MEANING-BASED SEARCH
+=======================================
+
+I want semantic search to work for real, not as a weak keyword filter.
+
+Current problem:
+Search by meaning is almost non-functional.
+
+Target behavior:
+
+* search should retrieve relevant items by meaning/topic/context
+* it should work across:
+
+  * notes
+  * file content
+  * links
+  * tags
+  * extracted text
+* a user should be able to search imperfectly and still find related results
+
+Implementation preference:
+
+* use embeddings + vector search if possible
+* use a proper vector storage strategy if possible
+* rank results by semantic similarity
+* combine semantic score with metadata/tags/type signals if useful
+
+If full vector DB is not practical inside the project, implement the strongest realistic semantic pipeline possible and clearly structure it for future extension.
+
+Important:
+Do not claim “semantic search” unless you actually implement a meaningful retrieval mechanism.
+
+==================================================
+5. MEMORY INGESTION AND ANALYSIS PIPELINE
+=========================================
+
+I want the system to analyze newly added content properly.
+
+For each new memory item, where possible:
+
+* detect content type
+* store normalized content
+* extract useful terms/entities/topics
+* generate tags or related metadata
+* prepare the item for semantic retrieval
+* connect it with similar existing items if possible
+
+This should apply to:
+
+* text notes
+* links
+* uploaded files
+
+==================================================
+6. BETTER DATA MODEL
+====================
+
+Refactor the current storage model if needed.
+
+I want the data model to support:
+
+* memory items of different types
+* original raw content
+* extracted content
+* metadata
+* tags
+* created/updated dates
+* file/link-specific fields
+* embeddings or semantic representation if implemented
+* relations between memory items
+
+If LocalStorage is not enough anymore, move to a more suitable backend/data solution inside this project.
+
+==================================================
+7. UI MUST REFLECT REAL FUNCTIONALITY
+=====================================
+
+Do not only improve backend logic.
+The UI must clearly show that the features are now working.
+
+Required UI improvements tied to real behavior:
+
+* file items should show extracted content preview when available
+* link items should show title/domain/description when available
+* AI chat responses should show real supporting sources
+* search results should explain why something matched
+* memory details should show:
+
+  * original content
+  * extracted text
+  * tags
+  * related items
+  * AI summary if available
+* if processing is happening, show loading/progress states
+* if something is unsupported, show honest feedback
+
+==================================================
+8. HONEST SYSTEM BEHAVIOR
+=========================
+
+I do NOT want fake intelligence.
+
+Rules:
+
+* do not leave hardcoded repeated answers
+* do not use placeholder mock logic if a real implementation is possible
+* if something is partially implemented, make that clear in code and UX
+* but do your best to make the core system genuinely functional
+
+==================================================
+9. EXECUTION STRATEGY
+=====================
+
+Please implement this carefully in phases.
+
+Suggested order:
+
+1. stabilize current data model
+2. implement proper file storage + text extraction
+3. implement richer link ingestion
+4. implement memory indexing / analysis layer
+5. implement real semantic retrieval
+6. implement retrieval-based AI chat
+7. update UI to surface real data and results
+8. verify everything still works
+
+After each phase:
+
+* confirm what was implemented
+* list files changed
+* explain what is now real vs still partial
+* verify the app still runs
+
+==================================================
+10. FINAL DELIVERABLE
+=====================
+
+At the end, I want:
+
+* real file upload handling
+* extracted file content saved and searchable
+* richer saved links
+* AI Chat that actually uses stored data and responds differently depending on context
+* semantic search that is meaning-based in a real way
+* a system that feels like an actual intelligent personal memory base
+
+Important:
+Do not stop at planning.
+Do not just describe architecture.
+Implement real code changes.
+
+Start with the safest meaningful backend/data changes first, then continue step by step until the system becomes genuinely functional.

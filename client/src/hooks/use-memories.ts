@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl } from "@shared/routes";
-import { type MemoryResponse, type SearchResponse, type CreateMemoryRequest, type UpdateMemoryRequest } from "@shared/schema";
+import { type MemoryResponse, type SearchResponse, type CreateMemoryRequest, type UpdateMemoryRequest, type ChatRequest, type ChatResponse } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 
 async function fetchApi<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -12,18 +12,16 @@ async function fetchApi<T>(path: string, options: RequestInit = {}): Promise<T> 
     },
     credentials: "include",
   });
-  
+
   if (!res.ok) {
     let message = "Произошла ошибка";
     try {
       const data = await res.json();
       message = data.message || message;
-    } catch (e) {
-      // Ignore
-    }
+    } catch { /* Ignore */ }
     throw new Error(message);
   }
-  
+
   if (res.status === 204) return {} as T;
   return res.json();
 }
@@ -59,10 +57,9 @@ export function useSearchMemories(query: string, mode: 'semantic' | 'keyword') {
 
 export function useCreateMemory() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
-    mutationFn: (data: CreateMemoryRequest) => 
+    mutationFn: (data: CreateMemoryRequest) =>
       fetchApi<MemoryResponse>(api.memories.create.path, {
         method: api.memories.create.method,
         body: JSON.stringify(data),
@@ -103,4 +100,58 @@ export function useDeleteMemory() {
       queryClient.invalidateQueries({ queryKey: [api.memories.list.path] });
     },
   });
+}
+
+export function useChatMessage() {
+  return useMutation({
+    mutationFn: (data: ChatRequest) =>
+      fetchApi<ChatResponse>(api.chat.path, {
+        method: api.chat.method,
+        body: JSON.stringify(data),
+      }),
+  });
+}
+
+export async function uploadFile(file: File): Promise<{
+  filePath: string;
+  fileName: string;
+  fileMimeType: string;
+  fileSize: number;
+  extractedContent: string;
+  wordCount: number;
+  characterCount: number;
+  supported: boolean;
+  message: string;
+}> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch(api.upload.path, {
+    method: api.upload.method,
+    body: formData,
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: "Ошибка загрузки" }));
+    throw new Error(err.message);
+  }
+  return res.json();
+}
+
+export async function fetchLinkMeta(url: string): Promise<{
+  url: string;
+  domain: string;
+  title: string;
+  description: string;
+  bodyText: string;
+  success: boolean;
+  error?: string;
+}> {
+  const res = await fetch(api.fetchLink.path, {
+    method: api.fetchLink.method,
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ url }),
+  });
+  if (!res.ok) throw new Error("Не удалось загрузить метаданные ссылки");
+  return res.json();
 }

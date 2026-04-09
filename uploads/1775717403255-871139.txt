@@ -1,0 +1,2 @@
+Краткий обзор технологий
+React, TypeScript, Node.js

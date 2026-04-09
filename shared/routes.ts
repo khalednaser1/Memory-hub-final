@@ -77,7 +77,27 @@ export const api = {
           ),
         }),
       },
-    }
+    },
+  },
+  upload: {
+    method: 'POST' as const,
+    path: '/api/upload' as const,
+  },
+  fetchLink: {
+    method: 'POST' as const,
+    path: '/api/fetch-link' as const,
+    input: z.object({ url: z.string() }),
+  },
+  chat: {
+    method: 'POST' as const,
+    path: '/api/chat' as const,
+    input: z.object({
+      message: z.string(),
+      history: z.array(z.object({
+        role: z.enum(['user', 'assistant']),
+        content: z.string(),
+      })).optional(),
+    }),
   },
 };
 

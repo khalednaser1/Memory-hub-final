@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, jsonb, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, jsonb, integer, real } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -13,6 +13,23 @@ export const memories = pgTable("memories", {
   summary: text("summary").notNull().default(""),
   semanticSignature: text("semantic_signature").notNull().default(""),
   relatedIds: integer("related_ids").array().notNull().default([]),
+
+  // Extracted / processed content (file text, scraped link text)
+  extractedContent: text("extracted_content").default(""),
+
+  // File-specific fields
+  filePath: text("file_path").default(""),
+  fileMimeType: text("file_mime_type").default(""),
+  fileSize: integer("file_size").default(0),
+
+  // Link-specific fields
+  linkUrl: text("link_url").default(""),
+  linkTitle: text("link_title").default(""),
+  linkDomain: text("link_domain").default(""),
+  linkDescription: text("link_description").default(""),
+
+  // Processing state
+  processingStatus: text("processing_status").default("done"), // pending | done | error
 });
 
 export const insertMemorySchema = createInsertSchema(memories).omit({
@@ -22,10 +39,19 @@ export const insertMemorySchema = createInsertSchema(memories).omit({
   entities: true,
   summary: true,
   semanticSignature: true,
-  relatedIds: true
+  relatedIds: true,
 }).extend({
   tags: z.array(z.string()).optional(),
   link: z.string().optional(),
+  extractedContent: z.string().optional(),
+  filePath: z.string().optional(),
+  fileMimeType: z.string().optional(),
+  fileSize: z.number().optional(),
+  linkUrl: z.string().optional(),
+  linkTitle: z.string().optional(),
+  linkDomain: z.string().optional(),
+  linkDescription: z.string().optional(),
+  processingStatus: z.string().optional(),
 });
 
 export type Memory = typeof memories.$inferSelect;
@@ -46,4 +72,14 @@ export type SearchResponse = {
 export type SearchRequest = {
   query: string;
   mode: 'semantic' | 'keyword';
+};
+
+export type ChatRequest = {
+  message: string;
+  history?: { role: 'user' | 'assistant'; content: string }[];
+};
+
+export type ChatResponse = {
+  content: string;
+  sources: { id: number; title: string; type: string }[];
 };

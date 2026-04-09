@@ -5,7 +5,7 @@ import { ru } from "date-fns/locale";
 import {
   ArrowLeft, Calendar, FileText, Link as LinkIcon, Image as ImageIcon,
   Hash, User, Network, Trash2, Edit, ExternalLink, BrainCircuit,
-  Save, X, Tag, Clock, AtSign, Sparkles
+  Save, X, Tag, Clock, AtSign, Sparkles, Globe, FileCheck, File as FileIcon
 } from "lucide-react";
 import { useMemory, useDeleteMemory, useUpdateMemory, useMemories } from "@/hooks/use-memories";
 import { Button } from "@/components/ui/button";
@@ -222,14 +222,111 @@ export default function MemoryDetail() {
                 data-testid="input-edit-content"
               />
             ) : memory.type === "link" ? (
-              <div className="flex flex-col items-center text-center py-10 bg-muted/20 rounded-2xl border border-border/20">
-                <div className="bg-emerald-500/10 p-4 rounded-2xl mb-4">
-                  <LinkIcon className="w-8 h-8 text-emerald-500" />
+              <div className="space-y-4">
+                {/* Link card */}
+                <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-5">
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="bg-emerald-500/10 p-2.5 rounded-xl shrink-0 mt-0.5">
+                      <Globe className="w-5 h-5 text-emerald-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-base text-foreground leading-snug mb-1">
+                        {memory.linkTitle || memory.title}
+                      </p>
+                      {memory.linkDomain && (
+                        <p className="text-xs text-muted-foreground mb-2">{memory.linkDomain}</p>
+                      )}
+                      {memory.linkDescription && (
+                        <p className="text-sm text-muted-foreground leading-relaxed">{memory.linkDescription}</p>
+                      )}
+                    </div>
+                  </div>
+                  <a
+                    href={memory.linkUrl || memory.content}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 px-4 py-2 rounded-xl transition-all border border-emerald-500/20"
+                    data-testid="link-open-external"
+                  >
+                    Открыть страницу <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
                 </div>
-                <a href={memory.content} target="_blank" rel="noopener noreferrer" className="text-lg font-medium text-primary hover:underline flex items-center gap-2 mb-2 break-all px-4">
-                  Открыть ссылку <ExternalLink className="w-4 h-4" />
-                </a>
-                <p className="text-xs text-muted-foreground max-w-md break-all">{memory.content}</p>
+                {/* Personal note */}
+                {memory.content && memory.content !== (memory.linkUrl || "") && memory.content !== (memory.linkDescription || "") && (
+                  <div className="bg-card border border-border/30 rounded-xl p-4">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Ваша заметка</p>
+                    <p className="text-sm text-foreground/90 leading-relaxed">{memory.content}</p>
+                  </div>
+                )}
+                {/* Extracted page text */}
+                {memory.extractedContent && (
+                  <div className="bg-muted/30 border border-border/20 rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FileCheck className="w-3.5 h-3.5 text-emerald-500" />
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Извлечённый текст страницы</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed line-clamp-6">{memory.extractedContent}</p>
+                  </div>
+                )}
+              </div>
+            ) : memory.type === "file" ? (
+              <div className="space-y-4">
+                {/* File info card */}
+                <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-5">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="bg-amber-500/10 p-2.5 rounded-xl shrink-0">
+                      <FileIcon className="w-5 h-5 text-amber-500" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">{memory.title}</p>
+                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                        {memory.fileMimeType && (
+                          <Badge variant="outline" className="text-[10px] border-amber-500/20 text-amber-600 dark:text-amber-400 bg-amber-500/5">
+                            {memory.fileMimeType.split("/").pop()?.toUpperCase()}
+                          </Badge>
+                        )}
+                        {memory.fileSize && memory.fileSize > 0 && (
+                          <span className="text-[11px] text-muted-foreground">
+                            {memory.fileSize < 1024 * 1024
+                              ? `${(memory.fileSize / 1024).toFixed(1)} КБ`
+                              : `${(memory.fileSize / (1024 * 1024)).toFixed(1)} МБ`}
+                          </span>
+                        )}
+                        {memory.extractedContent && (
+                          <span className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                            <FileCheck className="w-3 h-3" />
+                            {memory.extractedContent.split(/\s+/).filter(Boolean).length} слов извлечено
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  {memory.content && (
+                    <p className="text-sm text-muted-foreground">{memory.content}</p>
+                  )}
+                </div>
+                {/* Extracted text */}
+                {memory.extractedContent ? (
+                  <div className="bg-card border border-border/30 rounded-xl p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <FileCheck className="w-3.5 h-3.5 text-emerald-500" />
+                      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Извлечённый текст</p>
+                    </div>
+                    <div className="prose dark:prose-invert max-w-none text-foreground text-sm leading-relaxed">
+                      {memory.extractedContent.slice(0, 2000).split("\n").map((para, i) =>
+                        para ? <p key={i}>{para}</p> : <br key={i} />
+                      )}
+                      {memory.extractedContent.length > 2000 && (
+                        <p className="text-muted-foreground italic mt-2">...и ещё {memory.extractedContent.length - 2000} символов</p>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-amber-500/5 border border-amber-500/15 rounded-xl p-4 flex items-center gap-2">
+                    <FileIcon className="w-4 h-4 text-amber-500 shrink-0" />
+                    <p className="text-xs text-amber-700 dark:text-amber-400">Текст не извлечён (изображение или неподдерживаемый формат)</p>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="prose dark:prose-invert max-w-none text-foreground leading-relaxed text-sm">

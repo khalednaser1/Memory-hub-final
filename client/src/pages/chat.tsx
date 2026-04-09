@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMemories } from "@/hooks/use-memories";
+import { useMemories, useChatMessage } from "@/hooks/use-memories";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -10,8 +10,6 @@ import {
   ArrowUpRight, Bot, User, MessageCircle, Search, Layers, Tag
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { semanticSearch } from "@/lib/search";
-import type { Memory } from "@shared/schema";
 
 interface SourceRef {
   id: number;
@@ -33,7 +31,7 @@ const SUGGESTED_PROMPTS = [
   { icon: Tag, text: "Покажи статистику по тегам" },
   { icon: Layers, text: "Сколько у меня воспоминаний?" },
   { icon: MessageCircle, text: "Что я добавлял на этой неделе?" },
-  { icon: Sparkles, text: "Расскажи о моих дизайн-ресурсах" },
+  { icon: Sparkles, text: "Расскажи о моих файлах и ссылках" },
 ];
 
 const FEATURE_CARDS = [
@@ -72,87 +70,6 @@ function pluralRu(n: number, one: string, few: string, many: string) {
   return `${n} ${many}`;
 }
 
-function generateAIResponse(query: string, memories: Memory[]): { content: string; sources: SourceRef[] } {
-  const q = query.toLowerCase();
-  const results = semanticSearch(memories, query, "semantic").slice(0, 4);
-  const sources: SourceRef[] = results.map(r => ({ id: r.id, title: r.title, type: r.type }));
-
-  const isTagQ = /тег|метк/.test(q);
-  const isCountQ = /сколько|количество|всего/.test(q);
-  const isWeekQ = /недел|недавн|сегодня|сейчас/.test(q);
-  const isStatQ = /статистик|аналитик|обзор/.test(q);
-
-  let content = "";
-
-  if (isCountQ || isStatQ) {
-    const textCount = memories.filter(m => m.type === "text").length;
-    const linkCount = memories.filter(m => m.type === "link").length;
-    const fileCount = memories.filter(m => m.type === "file").length;
-    const allTags = new Set(memories.flatMap(m => m.tags));
-    content =
-      `В вашей базе знаний хранится **${pluralRu(memories.length, "воспоминание", "воспоминания", "воспоминаний")}**.\n\n` +
-      `**По типу:**\n` +
-      `• 📝 Текстовых заметок: ${textCount}\n` +
-      `• 🔗 Ссылок: ${linkCount}\n` +
-      `• 📎 Файлов: ${fileCount}\n\n` +
-      `**Уникальных тегов:** ${allTags.size}`;
-    return { content, sources: [] };
-  }
-
-  if (isTagQ) {
-    const tagCounts: Record<string, number> = {};
-    memories.forEach(m => m.tags.forEach(tag => { tagCounts[tag] = (tagCounts[tag] || 0) + 1; }));
-    const sorted = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
-    if (sorted.length === 0) {
-      content = "В вашей базе пока нет тегов. Добавьте их при создании воспоминаний — это поможет лучше организовать и искать информацию.";
-    } else {
-      content =
-        `Ваши наиболее используемые теги (всего ${Object.keys(tagCounts).length} уникальных):\n\n` +
-        sorted.map(([tag, count]) => `• **#${tag}** — ${pluralRu(count, "запись", "записи", "записей")}`).join("\n");
-    }
-    return { content, sources: [] };
-  }
-
-  if (isWeekQ) {
-    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const recent = memories.filter(m => new Date(m.createdAt).getTime() > weekAgo);
-    if (recent.length === 0) {
-      content = "За последнюю неделю вы не добавляли новых воспоминаний. Самое время что-нибудь записать!";
-    } else {
-      content =
-        `За последние 7 дней вы добавили **${pluralRu(recent.length, "воспоминание", "воспоминания", "воспоминаний")}**:\n\n` +
-        recent.slice(0, 4).map(m => `• **${m.title}** — ${(m.summary || m.content).slice(0, 70)}...`).join("\n");
-    }
-    return { content, sources: recent.slice(0, 4).map(m => ({ id: m.id, title: m.title, type: m.type })) };
-  }
-
-  if (results.length === 0) {
-    content =
-      `По запросу «${query}» я не нашёл подходящих записей.\n\n` +
-      `**Попробуйте:**\n` +
-      `• Использовать более общие слова\n` +
-      `• Переключиться в режим поиска по ключевым словам\n` +
-      `• Сохранить информацию по этой теме`;
-    return { content, sources: [] };
-  }
-
-  const main = results[0];
-  const excerpt = (main.summary || main.content).slice(0, 180);
-
-  if (results.length === 1) {
-    content = `Нашёл одну запись, которая соответствует вашему запросу:\n\n**${main.title}**\n${excerpt}${excerpt.length >= 180 ? "..." : ""}`;
-  } else {
-    content =
-      `Нашёл **${pluralRu(results.length, "запись", "записи", "записей")}** по вашему запросу.\n\n` +
-      `**Наиболее релевантная:** ${main.title}\n${excerpt}${excerpt.length >= 180 ? "..." : ""}\n\n` +
-      (results.length > 1
-        ? `**Также связаны:**\n${results.slice(1).map(r => `• ${r.title}`).join("\n")}`
-        : "");
-  }
-
-  return { content, sources };
-}
-
 function renderContent(text: string) {
   const lines = text.split("\n");
   return lines.map((line, i) => {
@@ -183,6 +100,7 @@ function TypingIndicator() {
 
 export default function Chat() {
   const { data: memories = [] } = useMemories();
+  const chatMutation = useChatMessage();
   const { toast } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -192,14 +110,14 @@ export default function Chat() {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("chatHistory_v2");
+      const saved = localStorage.getItem("chatHistory_v3");
       if (saved) setMessages(JSON.parse(saved));
     } catch { /* ignore */ }
   }, []);
 
   useEffect(() => {
     const persist = messages.filter(m => !m.isTyping);
-    localStorage.setItem("chatHistory_v2", JSON.stringify(persist));
+    localStorage.setItem("chatHistory_v3", JSON.stringify(persist));
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
@@ -215,25 +133,29 @@ export default function Chat() {
     setMessages(prev => [...prev, userMsg, typingMsg]);
     setIsLoading(true);
 
-    await new Promise(r => setTimeout(r, 800 + Math.random() * 700));
+    // Build conversation history for context
+    const history = messages
+      .filter(m => !m.isTyping)
+      .slice(-8)
+      .map(m => ({ role: m.role, content: m.content }));
 
     try {
-      const { content, sources } = generateAIResponse(query, memories);
+      const result = await chatMutation.mutateAsync({ message: query, history });
       const assistantMsg: ChatMessage = {
         id: typingId,
         role: "assistant",
-        content,
-        sources: sources.length > 0 ? sources : undefined,
+        content: result.content,
+        sources: result.sources?.length > 0 ? result.sources : undefined,
       };
       setMessages(prev => prev.map(m => m.id === typingId ? assistantMsg : m));
-    } catch {
+    } catch (err) {
       toast({ title: "Ошибка", description: "Не удалось обработать запрос", variant: "destructive" });
       setMessages(prev => prev.filter(m => m.id !== typingId));
     } finally {
       setIsLoading(false);
       setTimeout(() => textareaRef.current?.focus(), 100);
     }
-  }, [input, isLoading, memories, toast]);
+  }, [input, isLoading, messages, chatMutation, toast]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -244,7 +166,7 @@ export default function Chat() {
 
   const handleClear = () => {
     setMessages([]);
-    localStorage.removeItem("chatHistory_v2");
+    localStorage.removeItem("chatHistory_v3");
     toast({ title: "История очищена" });
   };
 
@@ -283,7 +205,8 @@ export default function Chat() {
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="text-[10px] gap-1 hidden sm:flex px-2 py-1 rounded-lg">
-            <Sparkles className="w-3 h-3" />Локальный AI
+            <Sparkles className="w-3 h-3" />
+            {process.env.OPENAI_API_KEY ? "GPT-4o mini" : "Локальный AI"}
           </Badge>
           {messages.length > 0 && (
             <Button variant="ghost" size="sm" onClick={handleClear} className="text-muted-foreground h-8 text-xs gap-1" data-testid="button-clear-chat">
@@ -366,14 +289,18 @@ export default function Chat() {
                       <div className="w-full">
                         <div className="bg-muted/40 border border-border/50 rounded-xl p-3 space-y-1.5 shadow-sm shadow-black/[0.03]">
                           <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5 mb-2">
-                            <Layers className="w-3 h-3" />Источники
+                            <Layers className="w-3 h-3" />Источники ({msg.sources.length})
                           </p>
                           {msg.sources.map(src => {
-                            const Icon = src.type === "link" ? LinkIcon : FileText;
+                            const Icon = src.type === "link" ? LinkIcon : src.type === "file" ? FileText : FileText;
                             return (
                               <Link key={src.id} href={`/memory/${src.id}`}>
                                 <div className="flex items-center gap-2 p-2 rounded-lg bg-card hover:bg-card/80 border border-border/30 hover:border-primary/20 transition-all group cursor-pointer" data-testid={`link-source-${src.id}`}>
-                                  <div className={`p-1.5 rounded-md shrink-0 ${src.type === "link" ? "bg-emerald-500/10 text-emerald-500" : "bg-blue-500/10 text-blue-500"}`}>
+                                  <div className={`p-1.5 rounded-md shrink-0 ${
+                                    src.type === "link" ? "bg-emerald-500/10 text-emerald-500" :
+                                    src.type === "file" ? "bg-amber-500/10 text-amber-500" :
+                                    "bg-blue-500/10 text-blue-500"
+                                  }`}>
                                     <Icon className="w-3 h-3" />
                                   </div>
                                   <span className="text-xs font-medium flex-1 truncate group-hover:text-primary transition-colors">
