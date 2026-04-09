@@ -19,9 +19,9 @@ function isStopword(word: string): boolean {
   return STOPWORDS_RU.has(word) || STOPWORDS_EN.has(word);
 }
 
-// ─── Tokenizer ────────────────────────────────────────────────────────────────
+// ─── Tokenizer (Unicode-aware — works for Cyrillic and Latin) ─────────────────
 function tokenize(text: string): string[] {
-  return (text.toLowerCase().match(/\b[a-zа-яёa-z0-9]{3,}\b/gi) || [])
+  return (text.toLowerCase().match(/[\p{L}\p{N}]{3,}/gu) || [])
     .filter(w => !isStopword(w));
 }
 

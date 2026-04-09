@@ -438,19 +438,44 @@ export default function MemoryDetail() {
                         )}
                       </div>
                     </div>
-                  ) : (
-                    <div className="border border-border/30 rounded-xl p-5 flex items-start gap-3 bg-muted/20">
-                      <FileTypeIcon className={`w-5 h-5 shrink-0 mt-0.5 ${fileMeta.color}`} />
-                      <div>
-                        <p className="text-sm font-medium mb-0.5">Текст не извлечён</p>
-                        <p className="text-xs text-muted-foreground">
-                          {isImage
-                            ? "Это изображение — текстовое содержание недоступно. Вы можете открыть или скачать файл выше."
-                            : "Формат файла не поддерживает автоматическое извлечение текста. Вы можете скачать файл выше."}
-                        </p>
+                  ) : (() => {
+                    const status = memory.processingStatus;
+                    const isScanned = status === "ocr_needed" || (isPdf && !memory.extractedContent);
+                    const isProtected = status === "protected";
+                    const statusColor = isProtected
+                      ? "border-amber-500/30 bg-amber-500/5"
+                      : isScanned
+                        ? "border-blue-500/30 bg-blue-500/5"
+                        : "border-border/30 bg-muted/20";
+                    const statusTitle = isProtected
+                      ? "PDF защищён паролем"
+                      : isScanned
+                        ? "Сканированный PDF — требуется OCR"
+                        : isImage
+                          ? "Изображение загружено"
+                          : "Текст не извлечён";
+                    const statusDesc = isProtected
+                      ? "Этот PDF защищён паролем или DRM. Содержимое доступно только после его открытия с паролем. Файл сохранён и доступен для скачивания."
+                      : isScanned
+                        ? "Текст в этом PDF хранится как изображения (скан). Автоматическое извлечение текста (OCR) в данной версии не поддерживается. Файл сохранён и доступен для просмотра и скачивания."
+                        : isImage
+                          ? "Это изображение — текстовое содержание недоступно. Вы можете открыть или скачать файл выше."
+                          : "Этот тип файла не поддерживает автоматическое извлечение текста. Файл сохранён и доступен для скачивания.";
+                    return (
+                      <div className={`border rounded-xl p-5 flex items-start gap-3 ${statusColor}`}>
+                        <FileTypeIcon className={`w-5 h-5 shrink-0 mt-0.5 ${fileMeta.color}`} />
+                        <div>
+                          <p className="text-sm font-medium mb-1">{statusTitle}</p>
+                          <p className="text-xs text-muted-foreground leading-relaxed">{statusDesc}</p>
+                          {isScanned && (
+                            <p className="text-[11px] text-blue-600 dark:text-blue-400 mt-2 font-medium">
+                              Совет: для извлечения текста используйте Adobe Acrobat или другой OCR-инструмент, затем добавьте текст в заметке к файлу.
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
               );
             })() : (

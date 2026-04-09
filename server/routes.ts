@@ -133,6 +133,8 @@ export async function registerRoutes(
         characterCount: extraction.characterCount,
         supported: extraction.supported,
         message: extraction.message,
+        pdfStatus: extraction.pdfStatus ?? null,
+        pdfPageCount: extraction.pdfPageCount ?? null,
       });
     } catch (err) {
       console.error("File upload error:", err);

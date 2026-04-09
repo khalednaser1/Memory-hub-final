@@ -25,6 +25,8 @@ interface UploadedFile {
   wordCount: number;
   supported: boolean;
   message: string;
+  pdfStatus?: string | null;
+  pdfPageCount?: number | null;
 }
 
 interface LinkMeta {
@@ -117,6 +119,8 @@ export default function Capture() {
         wordCount: result.wordCount,
         supported: result.supported,
         message: result.message,
+        pdfStatus: result.pdfStatus ?? null,
+        pdfPageCount: result.pdfPageCount ?? null,
       });
       toast({
         title: result.supported ? "Текст извлечён" : "Файл загружен",
@@ -194,6 +198,13 @@ export default function Capture() {
           extractedContent: linkMeta?.bodyText || "",
         });
       } else if (type === "file" && uploadedFile) {
+        const fileProcessingStatus = uploadedFile.supported
+          ? "done"
+          : uploadedFile.pdfStatus === "scanned"
+            ? "ocr_needed"
+            : uploadedFile.pdfStatus === "protected"
+              ? "protected"
+              : "done";
         await createMemory.mutateAsync({
           title: title.trim(),
           content: content || `Файл: ${uploadedFile.name}`,
@@ -203,6 +214,7 @@ export default function Capture() {
           fileMimeType: uploadedFile.mimeType,
           fileSize: uploadedFile.size,
           extractedContent: uploadedFile.extractedContent,
+          processingStatus: fileProcessingStatus,
         });
       } else {
         await createMemory.mutateAsync({
@@ -451,7 +463,11 @@ export default function Capture() {
                     <div className={`flex items-start gap-2 p-2.5 rounded-lg text-xs ${
                       uploadedFile.supported
                         ? "bg-emerald-500/8 border border-emerald-500/15 text-emerald-700 dark:text-emerald-400"
-                        : "bg-amber-500/8 border border-amber-500/15 text-amber-700 dark:text-amber-400"
+                        : uploadedFile.pdfStatus === "scanned"
+                          ? "bg-blue-500/8 border border-blue-500/15 text-blue-700 dark:text-blue-400"
+                          : uploadedFile.pdfStatus === "protected"
+                            ? "bg-amber-500/8 border border-amber-500/15 text-amber-700 dark:text-amber-400"
+                            : "bg-muted/60 border border-border/30 text-muted-foreground"
                     }`}>
                       {uploadedFile.supported
                         ? <FileCheck className="w-3.5 h-3.5 shrink-0 mt-0.5" />
