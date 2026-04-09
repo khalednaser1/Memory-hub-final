@@ -1,0 +1,244 @@
+You are now working on the most important remaining weakness of this project: the AI Chat.
+
+The UI is already in a good place.
+File handling, link handling, and search have improved.
+Now the assistant behavior itself must become excellent.
+
+This is a high-priority quality pass.
+Treat this as the part that will define whether the project feels truly intelligent or still feels like a prototype.
+
+## Mission
+
+Transform the AI Chat from a weak retrieval demo into a strong memory assistant that:
+
+* understands the user’s actual question
+* retrieves the right memory items
+* reasons over them
+* answers directly and intelligently
+* cites sources only to support the answer, not to replace it
+
+## Current failure
+
+Right now the assistant often behaves like a list exporter.
+Instead of answering the question, it dumps files, links, and notes.
+That is the core problem.
+
+Examples:
+
+* If I ask: "Какой статус у этого PDF?"
+  it should answer directly whether the PDF is scanned, protected, or text-based
+* If I ask: "Можно ли извлечь текст из этого PDF?"
+  it should explain directly whether OCR is needed
+* If I ask about a specific file or link, it should use that item’s real metadata, extracted content, and processing status
+* If I ask for a summary, it should summarize
+* If I ask for a list, then and only then it should list
+
+## What I want
+
+I want this assistant to feel like a real memory assistant, not a memory dump.
+
+### 1. Strong intent detection
+
+Improve intent detection so the assistant clearly distinguishes between:
+
+* status questions
+* summary questions
+* list questions
+* count/statistics questions
+* comparison questions
+* explanation questions
+* capability questions
+* file-specific questions
+* link-specific questions
+* note/content questions
+
+The assistant must choose the correct response strategy depending on the user’s intent.
+
+### 2. Answer the question first
+
+The assistant must answer directly before anything else.
+
+Correct response structure:
+
+1. direct answer
+2. short explanation
+3. optional supporting sources
+
+Wrong behavior:
+
+* starting with a generic list
+* dumping all retrieved memories
+* giving vague answers
+* answering with the same template for different questions
+
+### 3. Better retrieval-to-answer synthesis
+
+Retrieval is not enough.
+The assistant must synthesize an answer from the retrieved memories.
+
+That means:
+
+* detect which memory items are truly relevant
+* use the most relevant ones
+* combine them into one coherent answer
+* avoid dumping irrelevant items
+* avoid repeating the same pattern for unrelated prompts
+
+### 4. Use memory-type-specific reasoning
+
+For file questions, the assistant must use:
+
+* file type
+* file processing status
+* extracted text
+* OCR requirement if relevant
+* file metadata
+
+For link questions, the assistant must use:
+
+* title
+* domain
+* extracted page text
+* saved URL metadata
+
+For note questions, the assistant must use:
+
+* note content
+* tags
+* entities
+* related items
+
+### 5. Better behavior on file/PDF questions
+
+This is especially important.
+
+If I ask:
+
+* "Какой статус у этого PDF?"
+* "Можно ли извлечь текст из этого PDF?"
+* "О чём этот документ?"
+* "Что содержится в PDF Memory_Hub(1)?"
+
+The assistant must not return a generic list of files.
+It must answer specifically about the target document.
+
+Examples of desired behavior:
+
+* "Этот PDF распознан как сканированный, поэтому автоматическое извлечение текста сейчас недоступно. Для извлечения текста потребуется OCR."
+* "Документ содержит материалы, связанные с Memory Hub и отчётом по практике..."
+* "Текст был успешно извлечён из DOCX-файла, поэтому его содержимое доступно для поиска и анализа."
+
+### 6. Better behavior on semantic knowledge questions
+
+If I ask:
+
+* "Что у меня есть по управлению знаниями?"
+* "Какие материалы связаны с PKM?"
+* "Что я сохранял про Notion и Obsidian?"
+* "Сделай краткое summary того, что у меня есть по семантическому поиску"
+
+The assistant should:
+
+* retrieve relevant memories
+* group them mentally
+* answer naturally
+* provide a concise synthesis
+* then optionally show source links
+
+It must not respond like a database dump.
+
+### 7. Better answer styles by intent
+
+Implement different answer styles depending on question type:
+
+#### Status question
+
+* direct status
+* short explanation
+* source
+
+#### Summary question
+
+* concise summary
+* grouped ideas
+* optional source list
+
+#### List question
+
+* clear bullet list
+* grouped by type if useful
+
+#### Count/stat question
+
+* give the number first
+* explain briefly
+* optionally cite relevant sources
+
+#### Comparison question
+
+* explicitly compare
+* mention differences
+* reference supporting memories
+
+#### Capability question
+
+* answer whether something is possible
+* explain the limitation if not
+* do not dump unrelated content
+
+### 8. Do not over-answer
+
+The assistant should not be unnecessarily verbose.
+Short questions need short, precise answers.
+
+### 9. Preserve source support
+
+Keep source citation, but make it secondary.
+Sources should support the answer, not replace the answer.
+
+### 10. Keep the chat useful and believable
+
+I want this assistant to feel like:
+
+* focused
+* grounded in stored data
+* helpful
+* context-aware
+* different in each answer
+* able to explain itself briefly
+
+I do NOT want:
+
+* repeated generic answer patterns
+* large irrelevant memory dumps
+* shallow “smart-sounding” responses
+* fake reasoning
+
+## Implementation requirement
+
+Make real code changes now.
+Do not stop at analysis.
+Do not just adjust wording superficially.
+Improve:
+
+* intent routing
+* retrieval selection
+* response synthesis
+* answer templates by intent
+* file-aware and link-aware reasoning
+
+## Quality standard
+
+This part must feel like the intelligence center of the product.
+Treat it as the make-or-break feature of the entire Memory Hub system.
+
+## After implementation
+
+Report:
+
+1. what changed in intent detection
+2. what changed in answer synthesis
+3. how file questions are now handled
+4. how summary/list/status questions now differ
+5. what still remains limited
+6. 5 concrete prompts I can use to verify the improved assistant behavior immediately
