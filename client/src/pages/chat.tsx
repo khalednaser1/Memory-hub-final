@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 import { useMemories, useChatMessage } from "@/hooks/use-memories";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -100,6 +101,9 @@ function TypingIndicator() {
 
 export default function Chat() {
   const { data: memories = [] } = useMemories();
+  const { data: appStatus } = useQuery<{ aiAvailable: boolean; modelName: string }>({
+    queryKey: ["/api/status"],
+  });
   const chatMutation = useChatMessage();
   const { toast } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -206,7 +210,7 @@ export default function Chat() {
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="text-[10px] gap-1 hidden sm:flex px-2 py-1 rounded-lg">
             <Sparkles className="w-3 h-3" />
-            {process.env.OPENAI_API_KEY ? "GPT-4o mini" : "Локальный AI"}
+            {appStatus?.modelName ?? "AI"}
           </Badge>
           {messages.length > 0 && (
             <Button variant="ghost" size="sm" onClick={handleClear} className="text-muted-foreground h-8 text-xs gap-1" data-testid="button-clear-chat">

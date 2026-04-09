@@ -191,6 +191,15 @@ export async function registerRoutes(
     }
   });
 
+  // ─── App Status (safe, no secrets exposed) ─────────────────────────────────
+  app.get(api.status.path, (_req, res) => {
+    const aiAvailable = Boolean(process.env.OPENAI_API_KEY);
+    res.json({
+      aiAvailable,
+      modelName: aiAvailable ? "GPT-4o mini" : "Локальный AI",
+    });
+  });
+
   // ─── Seed Data ─────────────────────────────────────────────────────────────
   async function seedDatabase() {
     const existing = await storage.getMemories();
