@@ -33,6 +33,7 @@ export default function Library() {
               { value: null, label: "Все" },
               { value: "text", label: "Тексты" },
               { value: "link", label: "Ссылки" },
+              { value: "file", label: "Файлы" },
             ].map(btn => (
               <Button 
                 key={btn.label}

@@ -35,7 +35,7 @@ const FEATURE_CARDS = [
     color: "text-primary",
     bg: "bg-primary/8",
     title: "Семантический поиск",
-    desc: "Находит по смыслу, а не точным словам — понимает синонимы и контекст",
+    desc: "Демонстрирует поиск по смыслу через локальную логику синонимов и контекста",
   },
   {
     icon: Zap,
@@ -49,7 +49,7 @@ const FEATURE_CARDS = [
     color: "text-amber-500",
     bg: "bg-amber-500/8",
     title: "Полное содержимое",
-    desc: "AI-выжимка, теги и сущности каждой записи — в панели справа",
+    desc: "Демо-выжимка, теги и сущности каждой записи — в панели справа",
   },
 ];
 
@@ -148,7 +148,7 @@ function PreviewPanel({ memory }: { memory: SearchResult }) {
         {memory.summary && (
           <div className="bg-primary/5 border border-primary/15 rounded-xl p-4">
             <p className="text-[10px] font-semibold text-primary mb-1.5 uppercase tracking-wider flex items-center gap-1.5">
-              <Sparkles className="w-3 h-3" />AI Выжимка
+              <Sparkles className="w-3 h-3" />Демо-выжимка
             </p>
             <p className="text-sm text-foreground/90 leading-relaxed">{memory.summary}</p>
           </div>

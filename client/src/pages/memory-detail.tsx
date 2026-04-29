@@ -233,7 +233,7 @@ export default function MemoryDetail() {
             <FileText className="w-3.5 h-3.5" />Содержание
           </TabsTrigger>
           <TabsTrigger value="summary" className="rounded-lg px-3.5 py-2 data-[state=active]:bg-card data-[state=active]:shadow-sm gap-1.5 text-xs font-medium" data-testid="tab-summary">
-            <Sparkles className="w-3.5 h-3.5" />AI Выжимка
+            <Sparkles className="w-3.5 h-3.5" />Демо-выжимка
           </TabsTrigger>
           <TabsTrigger value="entities" className="rounded-lg px-3.5 py-2 data-[state=active]:bg-card data-[state=active]:shadow-sm gap-1.5 text-xs font-medium" data-testid="tab-entities">
             <Network className="w-3.5 h-3.5" />Сущности
@@ -520,7 +520,7 @@ export default function MemoryDetail() {
                 <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 rounded-full blur-3xl -translate-x-1/4 -translate-y-1/4 pointer-events-none" />
                 <div className="flex items-center gap-2 mb-3 text-primary text-xs font-semibold uppercase tracking-wider">
                   <Sparkles className="w-4 h-4" />
-                  <span>Автоматическая выжимка</span>
+                  <span>Демо-выжимка</span>
                 </div>
                 <p className="text-foreground/90 leading-relaxed text-base relative z-10" data-testid="text-summary">{memory.summary}</p>
               </div>

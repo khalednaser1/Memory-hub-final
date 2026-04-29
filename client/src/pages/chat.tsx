@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
 import { useMemories, useChatMessage } from "@/hooks/use-memories";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -42,7 +41,7 @@ const FEATURE_CARDS = [
     bg: "from-primary/10 to-purple-500/10",
     border: "border-primary/15",
     title: "Умный поиск по памяти",
-    desc: "Задайте вопрос в свободной форме — AI найдёт нужное в ваших записях",
+    desc: "Задайте вопрос в свободной форме — демонстрационный ассистент покажет подходящие записи",
   },
   {
     icon: Layers,
@@ -101,9 +100,6 @@ function TypingIndicator() {
 
 export default function Chat() {
   const { data: memories = [] } = useMemories();
-  const { data: appStatus } = useQuery<{ aiAvailable: boolean; modelName: string }>({
-    queryKey: ["/api/status"],
-  });
   const chatMutation = useChatMessage();
   const { toast } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -190,14 +186,14 @@ export default function Chat() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-base font-bold tracking-tight" data-testid="text-chat-title">Memory Assistant</h1>
+              <h1 className="text-base font-bold tracking-tight" data-testid="text-chat-title">Memory Assistant mock</h1>
               <div className="flex items-center gap-1.5">
                 <motion.div
                   className="w-1.5 h-1.5 rounded-full bg-emerald-500"
                   animate={{ opacity: [1, 0.4, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 />
-                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">онлайн</span>
+                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">демо</span>
               </div>
             </div>
             <p className="text-[11px] text-muted-foreground">
@@ -210,7 +206,7 @@ export default function Chat() {
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="text-[10px] gap-1 hidden sm:flex px-2 py-1 rounded-lg">
             <Sparkles className="w-3 h-3" />
-            {appStatus?.modelName ?? "AI"}
+            mock AI assistant
           </Badge>
           {messages.length > 0 && (
             <Button variant="ghost" size="sm" onClick={handleClear} className="text-muted-foreground h-8 text-xs gap-1" data-testid="button-clear-chat">
