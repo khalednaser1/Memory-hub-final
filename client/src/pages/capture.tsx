@@ -184,8 +184,10 @@ export default function Capture() {
     toast({ title: "Сохранение...", description: "Анализируем содержимое." });
 
     try {
+      let savedMemory: { __savedLocally?: boolean } | undefined;
+
       if (type === "link") {
-        await createMemory.mutateAsync({
+        savedMemory = await createMemory.mutateAsync({
           title: title.trim(),
           content: content || (linkMeta?.description ?? link),
           type: "link",
@@ -205,7 +207,7 @@ export default function Capture() {
             : uploadedFile.pdfStatus === "protected"
               ? "protected"
               : "done";
-        await createMemory.mutateAsync({
+        savedMemory = await createMemory.mutateAsync({
           title: title.trim(),
           content: content || `Файл: ${uploadedFile.name}`,
           type: "file",
@@ -217,7 +219,7 @@ export default function Capture() {
           processingStatus: fileProcessingStatus,
         });
       } else {
-        await createMemory.mutateAsync({
+        savedMemory = await createMemory.mutateAsync({
           title: title.trim(),
           content,
           type: "text",
@@ -225,10 +227,16 @@ export default function Capture() {
         });
       }
 
-      toast({ title: "Сохранено!", description: "Воспоминание добавлено в библиотеку." });
+      const savedLocally = Boolean(savedMemory?.__savedLocally);
+      toast({
+        title: savedLocally ? "Сохранено локально!" : "Сохранено!",
+        description: savedLocally
+          ? "API недоступен, поэтому запись сохранена в браузере для демонстрации прототипа."
+          : "Воспоминание добавлено в библиотеку.",
+      });
       setLocation("/library");
     } catch {
-      toast({ title: "Ошибка", description: "Не удалось сохранить.", variant: "destructive" });
+      toast({ title: "Ошибка", description: "Не удалось сохранить ни через API, ни локально.", variant: "destructive" });
     }
   };
 
