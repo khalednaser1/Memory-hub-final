@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion } from "framer-motion";
 import {
@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { useCreateMemory, uploadFile, fetchLinkMeta } from "@/hooks/use-memories";
+import { fetchLinkMeta, useCreateMemory, uploadFile } from "@/hooks/use-memories";
 import { Badge } from "@/components/ui/badge";
 
 type MemoryType = "text" | "link" | "file";
@@ -27,6 +27,7 @@ interface UploadedFile {
   message: string;
   pdfStatus?: string | null;
   pdfPageCount?: number | null;
+  source: "server" | "local";
 }
 
 interface LinkMeta {
@@ -35,6 +36,119 @@ interface LinkMeta {
   description: string;
   bodyText: string;
   success: boolean;
+  tags: string[];
+  extractionStatus: string;
+  error?: string;
+}
+
+const GOOGLE_DRIVE_TAGS = ["google-drive", "drive", "ВКР", "материалы"];
+const YOUTUBE_TAGS = ["youtube", "видео"];
+const DEFAULT_LINK_TAGS = ["link", "source", "web"];
+
+function parseUrl(value: string): URL | null {
+  const raw = value.trim();
+  if (!raw) return null;
+
+  const candidate = /^[a-z][a-z\d+\-.]*:\/\//i.test(raw) ? raw : `https://${raw}`;
+  try {
+    return new URL(candidate);
+  } catch {
+    return null;
+  }
+}
+
+function cleanDomain(hostname: string): string {
+  return hostname.replace(/^www\./i, "");
+}
+
+function createLocalLinkMeta(value: string): LinkMeta | null {
+  const parsed = parseUrl(value);
+  if (!parsed) return null;
+
+  const domain = cleanDomain(parsed.hostname);
+  const host = domain.toLowerCase();
+
+  if (host === "drive.google.com" || host === "docs.google.com" || host.endsWith(".drive.google.com") || host.endsWith(".docs.google.com")) {
+    return {
+      title: "Google Drive: материалы",
+      domain,
+      description: "Материалы Google Drive для ВКР",
+      bodyText: "",
+      success: true,
+      tags: GOOGLE_DRIVE_TAGS,
+      extractionStatus: "Резервный предпросмотр без извлечения текста",
+    };
+  }
+
+  if (host === "youtube.com" || host === "youtu.be" || host.endsWith(".youtube.com")) {
+    return {
+      title: "YouTube: видео",
+      domain,
+      description: "Видео на YouTube",
+      bodyText: "",
+      success: true,
+      tags: YOUTUBE_TAGS,
+      extractionStatus: "Резервный предпросмотр без извлечения текста",
+    };
+  }
+
+  return {
+    title: domain || "Ссылка",
+    domain,
+    description: domain ? `Веб-ссылка: ${domain}` : "Веб-ссылка",
+    bodyText: "",
+    success: true,
+    tags: DEFAULT_LINK_TAGS,
+    extractionStatus: "Резервный предпросмотр без извлечения текста",
+  };
+}
+
+function mergeTags(current: string[], suggested: string[]): string[] {
+  const seen = new Set(current.map(tag => tag.toLowerCase()));
+  const next = [...current];
+
+  suggested.forEach(tag => {
+    const normalized = tag.toLowerCase();
+    if (!seen.has(normalized)) {
+      seen.add(normalized);
+      next.push(tag);
+    }
+  });
+
+  return next;
+}
+
+function replaceGeneratedTags(current: string[], suggested: string[], previousGenerated: string[]): string[] {
+  const previous = new Set(previousGenerated.map(tag => tag.toLowerCase()));
+  const nextSuggested = new Set(suggested.map(tag => tag.toLowerCase()));
+  const preserved = current.filter(tag => {
+    const normalized = tag.toLowerCase();
+    return !previous.has(normalized) || nextSuggested.has(normalized);
+  });
+
+  return mergeTags(preserved, suggested);
+}
+
+type BackendLinkMeta = Awaited<ReturnType<typeof fetchLinkMeta>>;
+
+function createBackendLinkMeta(meta: BackendLinkMeta, fallback: LinkMeta): LinkMeta {
+  const bodyText = meta.bodyText.trim();
+  const success = meta.success !== false;
+
+  return {
+    title: meta.title || fallback.title,
+    domain: meta.domain || fallback.domain,
+    description: meta.description || fallback.description,
+    bodyText,
+    success,
+    tags: meta.tags?.length ? meta.tags : fallback.tags,
+    extractionStatus: bodyText
+      ? "Текст страницы извлечён для поиска"
+      : success
+        ? "Предпросмотр получен, текст страницы не найден"
+        : "Текст страницы не извлечён",
+    error: meta.error,
+  };
 }
 
 function formatBytes(bytes: number): string {
@@ -84,6 +198,10 @@ export default function Capture() {
   const [isDragOver, setIsDragOver] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isFetchingLink, setIsFetchingLink] = useState(false);
+  const generatedTitleRef = useRef("");
+  const generatedTagsRef = useRef<string[]>([]);
+  const linkFetchTimeoutRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+  const linkRequestIdRef = useRef(0);
 
   const handleAddTag = (e: React.KeyboardEvent | React.FocusEvent) => {
     if (e.type === "keydown" && (e as React.KeyboardEvent).key !== "Enter") return;
@@ -96,6 +214,57 @@ export default function Capture() {
   };
 
   const removeTag = (tagToRemove: string) => setTags(tags.filter(t => t !== tagToRemove));
+
+  useEffect(() => {
+    return () => {
+      if (linkFetchTimeoutRef.current) {
+        window.clearTimeout(linkFetchTimeoutRef.current);
+      }
+      linkRequestIdRef.current += 1;
+    };
+  }, []);
+
+  const applyGeneratedLinkMeta = useCallback((meta: LinkMeta) => {
+    if (meta.title) {
+      setTitle(currentTitle => {
+        if (!currentTitle.trim() || currentTitle === generatedTitleRef.current) {
+          generatedTitleRef.current = meta.title;
+          return meta.title;
+        }
+        return currentTitle;
+      });
+    }
+
+    if (meta.tags.length > 0) {
+      setTags(currentTags => {
+        const nextTags = replaceGeneratedTags(currentTags, meta.tags, generatedTagsRef.current);
+        generatedTagsRef.current = meta.tags;
+        return nextTags;
+      });
+    }
+  }, []);
+
+  const loadLinkMeta = useCallback(async (nextLink: string, fallbackMeta: LinkMeta, requestId: number) => {
+    const parsed = parseUrl(nextLink);
+    if (!parsed) return;
+
+    try {
+      const backendMeta = createBackendLinkMeta(await fetchLinkMeta(parsed.href), fallbackMeta);
+      if (requestId !== linkRequestIdRef.current) return;
+
+      setLinkMeta(backendMeta);
+      applyGeneratedLinkMeta(backendMeta);
+    } catch {
+      if (requestId !== linkRequestIdRef.current) return;
+
+      setLinkMeta(fallbackMeta);
+      applyGeneratedLinkMeta(fallbackMeta);
+    } finally {
+      if (requestId === linkRequestIdRef.current) {
+        setIsFetchingLink(false);
+      }
+    }
+  }, [applyGeneratedLinkMeta]);
 
   const processFile = useCallback(async (file: File) => {
     const MAX_SIZE = 50 * 1024 * 1024;
@@ -111,9 +280,9 @@ export default function Capture() {
     try {
       const result = await uploadFile(file);
       setUploadedFile({
-        name: file.name,
-        size: file.size,
-        mimeType: file.type || "application/octet-stream",
+        name: result.fileName || file.name,
+        size: result.fileSize || file.size,
+        mimeType: result.fileMimeType || file.type || "application/octet-stream",
         filePath: result.filePath,
         extractedContent: result.extractedContent,
         wordCount: result.wordCount,
@@ -121,9 +290,12 @@ export default function Capture() {
         message: result.message,
         pdfStatus: result.pdfStatus ?? null,
         pdfPageCount: result.pdfPageCount ?? null,
+        source: result.source,
       });
       toast({
-        title: result.supported ? "Текст извлечён" : "Файл загружен",
+        title: result.source === "server"
+          ? (result.supported ? "Текст успешно извлечён" : "Файл обработан через сервер")
+          : (result.supported ? "Файл обработан локально" : "Файл сохранится локально"),
         description: result.message,
       });
     } catch (err) {
@@ -145,28 +317,39 @@ export default function Capture() {
     if (file) processFile(file);
   };
 
-  const handleLinkBlur = useCallback(async () => {
-    const url = link.trim();
-    if (!url || !url.startsWith("http") || linkMeta || isFetchingLink) return;
-    setIsFetchingLink(true);
-    try {
-      const meta = await fetchLinkMeta(url);
-      setLinkMeta(meta);
-      if (!title.trim() && meta.title) {
-        setTitle(meta.title);
-      }
-      if (!content.trim() && meta.description) {
-        setContent(meta.description);
-      }
-      if (meta.success) {
-        toast({ title: "Метаданные загружены", description: `${meta.domain} — ${meta.title || "без заголовка"}` });
-      }
-    } catch {
-      // silently fail — link metadata is optional
-    } finally {
-      setIsFetchingLink(false);
+  const handleLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const nextLink = e.target.value;
+    const fallbackMeta = createLocalLinkMeta(nextLink);
+
+    setLink(nextLink);
+
+    if (linkFetchTimeoutRef.current) {
+      window.clearTimeout(linkFetchTimeoutRef.current);
     }
-  }, [link, linkMeta, isFetchingLink, title, content, toast]);
+
+    if (!fallbackMeta) {
+      linkRequestIdRef.current += 1;
+      setLinkMeta(null);
+      setIsFetchingLink(false);
+      return;
+    }
+
+    const requestId = linkRequestIdRef.current + 1;
+    linkRequestIdRef.current = requestId;
+    setLinkMeta(null);
+    setIsFetchingLink(true);
+    linkFetchTimeoutRef.current = window.setTimeout(() => {
+      void loadLinkMeta(nextLink, fallbackMeta, requestId);
+    }, 500);
+  };
+
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const nextTitle = e.target.value;
+    if (nextTitle !== generatedTitleRef.current) {
+      generatedTitleRef.current = "";
+    }
+    setTitle(nextTitle);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -184,20 +367,21 @@ export default function Capture() {
     toast({ title: "Сохранение...", description: "Анализируем содержимое." });
 
     try {
-      let savedMemory: { __savedLocally?: boolean } | undefined;
-
       if (type === "link") {
-        savedMemory = await createMemory.mutateAsync({
-          title: title.trim(),
-          content: content || (linkMeta?.description ?? link),
+        const fallbackMeta = linkMeta ?? createLocalLinkMeta(link);
+        const finalTitle = title.trim() || fallbackMeta?.title || link.trim();
+
+        await createMemory.mutateAsync({
+          title: finalTitle,
+          content: content || (fallbackMeta?.description ?? link),
           type: "link",
           tags,
           link,
           linkUrl: link,
-          linkTitle: linkMeta?.title || "",
-          linkDomain: linkMeta?.domain || "",
-          linkDescription: linkMeta?.description || "",
-          extractedContent: linkMeta?.bodyText || "",
+          linkTitle: finalTitle,
+          linkDomain: fallbackMeta?.domain || "",
+          linkDescription: fallbackMeta?.description || "",
+          extractedContent: fallbackMeta?.bodyText || "",
         });
       } else if (type === "file" && uploadedFile) {
         const fileProcessingStatus = uploadedFile.supported
@@ -207,7 +391,7 @@ export default function Capture() {
             : uploadedFile.pdfStatus === "protected"
               ? "protected"
               : "done";
-        savedMemory = await createMemory.mutateAsync({
+        await createMemory.mutateAsync({
           title: title.trim(),
           content: content || `Файл: ${uploadedFile.name}`,
           type: "file",
@@ -219,7 +403,7 @@ export default function Capture() {
           processingStatus: fileProcessingStatus,
         });
       } else {
-        savedMemory = await createMemory.mutateAsync({
+        await createMemory.mutateAsync({
           title: title.trim(),
           content,
           type: "text",
@@ -227,16 +411,13 @@ export default function Capture() {
         });
       }
 
-      const savedLocally = Boolean(savedMemory?.__savedLocally);
       toast({
-        title: savedLocally ? "Сохранено локально!" : "Сохранено!",
-        description: savedLocally
-          ? "API недоступен, поэтому запись сохранена в браузере для демонстрации прототипа."
-          : "Воспоминание добавлено в библиотеку.",
+        title: "Сохранено!",
+        description: "Воспоминание сохранено в браузере и останется после перезагрузки.",
       });
       setLocation("/library");
     } catch {
-      toast({ title: "Ошибка", description: "Не удалось сохранить ни через API, ни локально.", variant: "destructive" });
+      toast({ title: "Ошибка", description: "Не удалось сохранить воспоминание в браузере.", variant: "destructive" });
     }
   };
 
@@ -281,7 +462,7 @@ export default function Capture() {
                 id="title"
                 placeholder="О чём это воспоминание?"
                 value={title}
-                onChange={e => setTitle(e.target.value)}
+                onChange={handleTitleChange}
                 className="h-12 text-base rounded-xl bg-muted/40 border-border/30"
                 required
                 data-testid="input-capture-title"
@@ -316,8 +497,7 @@ export default function Capture() {
                       placeholder="https://..."
                       className={`h-11 rounded-xl bg-muted/40 border-border/30 pr-10 ${isFetchingLink ? "opacity-70" : ""}`}
                       value={link}
-                      onChange={e => { setLink(e.target.value); setLinkMeta(null); }}
-                      onBlur={handleLinkBlur}
+                      onChange={handleLinkChange}
                       required
                       data-testid="input-capture-link"
                     />
@@ -352,16 +532,18 @@ export default function Capture() {
                         </div>
                         {linkMeta.domain && <p className="text-[11px] text-muted-foreground">{linkMeta.domain}</p>}
                         {linkMeta.description && <p className="text-xs text-muted-foreground line-clamp-2">{linkMeta.description}</p>}
-                        {linkMeta.bodyText && (
-                          <p className="text-[10px] text-emerald-600 dark:text-emerald-400">
-                            ✓ Текст страницы извлечён для поиска
-                          </p>
-                        )}
+                        <p className={`text-[10px] ${linkMeta.bodyText ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}>
+                          {linkMeta.extractionStatus}
+                        </p>
                       </>
                     ) : (
-                      <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                      <div className="flex items-start gap-2 text-amber-700 dark:text-amber-400">
                         <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                        <span className="text-xs">Не удалось загрузить метаданные — ссылка будет сохранена как есть</span>
+                        <div className="min-w-0 space-y-0.5">
+                          <p className="text-xs font-medium truncate">{linkMeta.title || "Метаданные недоступны"}</p>
+                          {linkMeta.domain && <p className="text-[11px] text-muted-foreground">{linkMeta.domain}</p>}
+                          <p className="text-xs">{linkMeta.error || linkMeta.extractionStatus}</p>
+                        </div>
                       </div>
                     )}
                   </motion.div>

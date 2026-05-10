@@ -1,35 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, buildUrl } from "@shared/routes";
-import { type MemoryResponse, type SearchResponse, type CreateMemoryRequest, type UpdateMemoryRequest, type ChatRequest, type ChatResponse } from "@shared/schema";
+import { api } from "@shared/routes";
+import { type MemoryResponse, type CreateMemoryRequest, type UpdateMemoryRequest, type ChatRequest, type ChatResponse } from "@shared/schema";
 import { withApiBase } from "@/lib/api-base";
 
-const LOCAL_MEMORIES_KEY = "memoryhub_memories";
+export const LOCAL_MEMORIES_KEY = "memoryhub_memories";
 
 type MemoryWithLocalFlag = MemoryResponse & { __savedLocally?: boolean };
 type SearchMemory = MemoryResponse & { relevanceScore: number; matchReason: string };
-
-async function fetchApi<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(withApiBase(path), {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-    credentials: "include",
-  });
-
-  if (!res.ok) {
-    let message = "Произошла ошибка";
-    try {
-      const data = await res.json();
-      message = data.message || message;
-    } catch {}
-    throw new Error(message);
-  }
-
-  if (res.status === 204) return {} as T;
-  return res.json();
-}
 
 function readLocalMemories(): MemoryResponse[] {
   if (typeof window === "undefined") return [];
@@ -44,15 +21,6 @@ function readLocalMemories(): MemoryResponse[] {
 
 function writeLocalMemories(memories: MemoryResponse[]) {
   window.localStorage.setItem(LOCAL_MEMORIES_KEY, JSON.stringify(memories));
-}
-
-function mergeMemories(apiMemories: MemoryResponse[], localMemories: MemoryResponse[]) {
-  const byId = new Map<number, MemoryResponse>();
-  apiMemories.forEach(memory => byId.set(memory.id, memory));
-  localMemories.forEach(memory => byId.set(memory.id, memory));
-  return Array.from(byId.values()).sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
 }
 
 function tokenize(text: string): string[] {
@@ -161,6 +129,10 @@ function deleteLocalMemory(id: number) {
   writeLocalMemories(recomputeLocalRelations(readLocalMemories().filter(memory => memory.id !== id)));
 }
 
+export function replaceLocalMemories(memories: MemoryResponse[]) {
+  writeLocalMemories(recomputeLocalRelations(memories));
+}
+
 function localSearch(query: string, mode: "semantic" | "keyword"): SearchMemory[] {
   const queryText = query.trim().toLowerCase();
   const queryTokens = tokenize(queryText);
@@ -213,25 +185,10 @@ function localSearch(query: string, mode: "semantic" | "keyword"): SearchMemory[
     .sort((a, b) => b.relevanceScore - a.relevanceScore);
 }
 
-function mergeSearchResults(apiResults: SearchMemory[], localResults: SearchMemory[]) {
-  const byId = new Map<number, SearchMemory>();
-  apiResults.forEach(result => byId.set(result.id, result));
-  localResults.forEach(result => byId.set(result.id, result));
-  return Array.from(byId.values()).sort((a, b) => b.relevanceScore - a.relevanceScore);
-}
-
 export function useMemories() {
   return useQuery({
     queryKey: [api.memories.list.path],
-    queryFn: async () => {
-      const localMemories = readLocalMemories();
-      try {
-        const apiMemories = await fetchApi<MemoryResponse[]>(api.memories.list.path);
-        return mergeMemories(apiMemories, localMemories);
-      } catch {
-        return localMemories;
-      }
-    },
+    queryFn: async () => readLocalMemories(),
   });
 }
 
@@ -239,14 +196,9 @@ export function useMemory(id: number) {
   return useQuery({
     queryKey: [api.memories.get.path, id],
     queryFn: async () => {
-      const url = buildUrl(api.memories.get.path, { id });
-      try {
-        return await fetchApi<MemoryResponse>(url);
-      } catch (err) {
-        const localMemory = readLocalMemories().find(memory => memory.id === id);
-        if (localMemory) return localMemory;
-        throw err;
-      }
+      const localMemory = readLocalMemories().find(memory => memory.id === id);
+      if (localMemory) return localMemory;
+      throw new Error("Memory not found");
     },
     enabled: !!id && !isNaN(id),
   });
@@ -255,18 +207,7 @@ export function useMemory(id: number) {
 export function useSearchMemories(query: string, mode: 'semantic' | 'keyword') {
   return useQuery({
     queryKey: [api.memories.search.path, query, mode],
-    queryFn: async () => {
-      const localResults = localSearch(query, mode);
-      try {
-        const apiResults = await fetchApi<SearchResponse>(api.memories.search.path, {
-          method: api.memories.search.method,
-          body: JSON.stringify({ query, mode }),
-        });
-        return { results: mergeSearchResults(apiResults.results, localResults) };
-      } catch {
-        return { results: localResults };
-      }
-    },
+    queryFn: async () => ({ results: localSearch(query, mode) }),
     enabled: query.length > 2,
   });
 }
@@ -275,18 +216,9 @@ export function useCreateMemory() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: CreateMemoryRequest): Promise<MemoryWithLocalFlag> => {
-      try {
-        return await fetchApi<MemoryResponse>(api.memories.create.path, {
-          method: api.memories.create.method,
-          body: JSON.stringify(data),
-        });
-      } catch {
-        return createLocalMemory(data);
-      }
-    },
+    mutationFn: async (data: CreateMemoryRequest): Promise<MemoryWithLocalFlag> => createLocalMemory(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [api.memories.list.path] });
+      queryClient.invalidateQueries();
     },
   });
 }
@@ -296,19 +228,10 @@ export function useUpdateMemory() {
 
   return useMutation({
     mutationFn: async ({ id, ...data }: { id: number } & UpdateMemoryRequest) => {
-      const url = buildUrl(api.memories.update.path, { id });
-      try {
-        return await fetchApi<MemoryResponse>(url, {
-          method: api.memories.update.method,
-          body: JSON.stringify(data),
-        });
-      } catch {
-        return updateLocalMemory(id, data);
-      }
+      return updateLocalMemory(id, data);
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: [api.memories.list.path] });
-      queryClient.invalidateQueries({ queryKey: [api.memories.get.path, variables.id] });
+    onSuccess: () => {
+      queryClient.invalidateQueries();
     },
   });
 }
@@ -318,15 +241,10 @@ export function useDeleteMemory() {
 
   return useMutation({
     mutationFn: async (id: number) => {
-      const url = buildUrl(api.memories.delete.path, { id });
-      try {
-        return await fetchApi<void>(url, { method: api.memories.delete.method });
-      } catch {
-        deleteLocalMemory(id);
-      }
+      deleteLocalMemory(id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [api.memories.list.path] });
+      queryClient.invalidateQueries();
     },
   });
 }
@@ -334,29 +252,50 @@ export function useDeleteMemory() {
 export function useChatMessage() {
   return useMutation({
     mutationFn: async (data: ChatRequest): Promise<ChatResponse> => {
-      try {
-        return await fetchApi<ChatResponse>(api.chat.path, {
-          method: api.chat.method,
-          body: JSON.stringify(data),
-        });
-      } catch {
-        const results = localSearch(data.message, "semantic").slice(0, 3);
-        if (results.length === 0) {
-          return {
-            content: "В локальной демонстрации я не нашёл подходящих воспоминаний. Добавьте запись в Capture или уточните вопрос.",
-            sources: [],
-          };
-        }
+      const memories = readLocalMemories();
+      const message = data.message.toLowerCase();
+
+      if (memories.length === 0) {
         return {
-          content: `Локальная демонстрация нашла ${results.length} подходящую запись:\n\n${results.map(result => `• **${result.title}** — ${result.summary || result.content.slice(0, 140)}`).join("\n")}`,
-          sources: results.map(result => ({ id: result.id, title: result.title, type: result.type })),
+          content: "В локальной базе пока нет воспоминаний. Добавьте запись в Capture, и ассистент сможет искать по вашим данным.",
+          sources: [],
         };
       }
+
+      if (/сколько|статист|тег|файл|ссылк|замет/i.test(message)) {
+        const textCount = memories.filter(memory => memory.type === "text").length;
+        const linkCount = memories.filter(memory => memory.type === "link").length;
+        const fileCount = memories.filter(memory => memory.type === "file").length;
+        const uniqueTags = Array.from(new Set(memories.flatMap(memory => memory.tags)));
+
+        return {
+          content:
+            `В локальной базе сохранено **${memories.length}** записей.\n\n` +
+            `• Заметки: ${textCount}\n` +
+            `• Ссылки: ${linkCount}\n` +
+            `• Файлы: ${fileCount}\n` +
+            `• Уникальные теги: ${uniqueTags.length}${uniqueTags.length ? ` (${uniqueTags.slice(0, 8).join(", ")})` : ""}`,
+          sources: memories.slice(0, 5).map(memory => ({ id: memory.id, title: memory.title, type: memory.type })),
+        };
+      }
+
+      const results = localSearch(data.message, "semantic").slice(0, 3);
+      if (results.length === 0) {
+        return {
+          content: "В локальной базе я не нашёл подходящих воспоминаний. Добавьте запись в Capture или уточните вопрос.",
+          sources: [],
+        };
+      }
+
+      return {
+        content: `Локальная демо-логика нашла ${results.length} подходящую запись:\n\n${results.map(result => `• **${result.title}** — ${result.summary || result.content.slice(0, 140)}`).join("\n")}`,
+        sources: results.map(result => ({ id: result.id, title: result.title, type: result.type })),
+      };
     },
   });
 }
 
-export async function uploadFile(file: File): Promise<{
+export interface UploadFileResult {
   filePath: string;
   fileName: string;
   fileMimeType: string;
@@ -366,7 +305,44 @@ export async function uploadFile(file: File): Promise<{
   characterCount: number;
   supported: boolean;
   message: string;
-}> {
+  pdfStatus?: string | null;
+  pdfPageCount?: number | null;
+  source: "server" | "local";
+}
+
+function optionalNumber(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+}
+
+function normalizeUploadResponse(data: unknown, file: File): UploadFileResult {
+  if (!data || typeof data !== "object") {
+    throw new Error("Некорректный ответ сервера загрузки");
+  }
+
+  const raw = data as Record<string, unknown>;
+  const extractedContent = optionalString(raw.extractedContent) || optionalString(raw.extractedText);
+  const wordCount = optionalNumber(raw.wordCount) ?? extractedContent.split(/\s+/).filter(Boolean).length;
+  const characterCount = optionalNumber(raw.characterCount) ?? extractedContent.length;
+  const supported = raw.supported === true;
+  const serverMessage = optionalString(raw.message);
+
+  return {
+    filePath: optionalString(raw.filePath),
+    fileName: optionalString(raw.fileName) || file.name,
+    fileMimeType: optionalString(raw.fileMimeType) || file.type || "application/octet-stream",
+    fileSize: optionalNumber(raw.fileSize) ?? file.size,
+    extractedContent,
+    wordCount,
+    characterCount,
+    supported,
+    message: serverMessage || (supported ? "Текст успешно извлечён" : "Файл обработан через сервер"),
+    pdfStatus: optionalString(raw.pdfStatus) || null,
+    pdfPageCount: optionalNumber(raw.pdfPageCount) ?? null,
+    source: "server",
+  };
+}
+
+export async function uploadFile(file: File): Promise<UploadFileResult> {
   const formData = new FormData();
   formData.append("file", file);
   try {
@@ -379,7 +355,7 @@ export async function uploadFile(file: File): Promise<{
       const err = await res.json().catch(() => ({ message: "Ошибка загрузки" }));
       throw new Error(err.message);
     }
-    return res.json();
+    return normalizeUploadResponse(await res.json(), file);
   } catch {
     const canReadText = file.type.startsWith("text/") || /\.(txt|md|csv)$/i.test(file.name);
     const extractedContent = canReadText ? await file.text() : "";
@@ -396,11 +372,14 @@ export async function uploadFile(file: File): Promise<{
       message: canReadText
         ? "Файл обработан локально для демонстрации. Он сохранится как запись в браузере."
         : "API недоступен: файл будет сохранён как локальная запись без загрузки содержимого.",
+      pdfStatus: null,
+      pdfPageCount: null,
+      source: "local",
     };
   }
 }
 
-export async function fetchLinkMeta(url: string): Promise<{
+export interface LinkMetadataResponse {
   url: string;
   domain: string;
   title: string;
@@ -408,7 +387,25 @@ export async function fetchLinkMeta(url: string): Promise<{
   bodyText: string;
   success: boolean;
   error?: string;
-}> {
+  tags?: string[];
+}
+
+function optionalString(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function optionalStringList(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+
+  const tags = value
+    .filter((tag): tag is string => typeof tag === "string")
+    .map(tag => tag.trim())
+    .filter(Boolean);
+
+  return tags.length > 0 ? Array.from(new Set(tags)) : undefined;
+}
+
+export async function fetchLinkMeta(url: string): Promise<LinkMetadataResponse> {
   const res = await fetch(withApiBase(api.fetchLink.path), {
     method: api.fetchLink.method,
     headers: { "Content-Type": "application/json" },
@@ -416,5 +413,24 @@ export async function fetchLinkMeta(url: string): Promise<{
     body: JSON.stringify({ url }),
   });
   if (!res.ok) throw new Error("Не удалось загрузить метаданные ссылки");
-  return res.json();
+  const data = await res.json();
+  if (!data || typeof data !== "object") {
+    throw new Error("Некорректный ответ сервера метаданных");
+  }
+
+  const raw = data as Record<string, unknown>;
+  return {
+    url: optionalString(raw.url) || url,
+    domain: optionalString(raw.domain),
+    title: optionalString(raw.title),
+    description: optionalString(raw.description),
+    bodyText:
+      optionalString(raw.bodyText) ||
+      optionalString(raw.extractedContent) ||
+      optionalString(raw.extractedText) ||
+      optionalString(raw.text),
+    success: raw.success === false ? false : true,
+    error: optionalString(raw.error) || undefined,
+    tags: optionalStringList(raw.tags) || optionalStringList(raw.keywords) || optionalStringList(raw.suggestedTags),
+  };
 }

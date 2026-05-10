@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/contexts/theme-context";
-import { useMemories } from "@/hooks/use-memories";
+import { LOCAL_MEMORIES_KEY, useMemories } from "@/hooks/use-memories";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -55,7 +55,8 @@ export default function Settings() {
         if (!file) return;
         const data = JSON.parse(await file.text());
         if (data.memories && Array.isArray(data.memories)) {
-          toast({ title: "Данные импортированы", description: "Перезагрузите страницу" });
+          localStorage.setItem(LOCAL_MEMORIES_KEY, JSON.stringify(data.memories));
+          toast({ title: "Данные импортированы", description: `${data.memories.length} воспоминаний сохранено в браузере` });
           window.location.reload();
         } else throw new Error("Invalid format");
       } catch {

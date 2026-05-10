@@ -248,6 +248,8 @@ export async function registerRoutes(
     }
   }
 
-  await seedDatabase();
+  if (process.env.ENABLE_DEMO_SEED === "true") {
+    await seedDatabase();
+  }
   return httpServer;
 }
